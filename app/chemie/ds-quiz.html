@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodiek Systeem Flashcards</title>
+    <style>
+        /* IMDb-stijl: donkere UI met rode accenten */
+        :root {
+            --imdb-dark: #121212;
+            --imdb-darker: #0a0a0a;
+            --imdb-card: #1a1a1a;
+            --imdb-text: #ffffff;
+            --imdb-text-secondary: #a0a0a0;
+            --imdb-accent: #e50914;
+            --imdb-accent-hover: #f40612;
+            --border-radius: 8px;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--imdb-dark);
+            color: var(--imdb-text);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 {
+            color: var(--imdb-accent);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--imdb-text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Configuratie panel */
+        .config-panel {
+            background-color: var(--imdb-card);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .config-panel h2 {
+            color: var(--imdb-text);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--imdb-text-secondary);
+            font-weight: 500;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: var(--border-radius);
+            color: var(--imdb-text);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--imdb-accent);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            background-color: var(--imdb-accent);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            flex: 1;
+        }
+
+        button:hover {
+            background-color: var(--imdb-accent-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .secondary-btn {
+            background-color: #333;
+        }
+
+        .secondary-btn:hover {
+            background-color: #444;
+        }
+
+        /* Quiz panel */
+        .quiz-panel {
+            background-color: var(--imdb-card);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            min-height: 400px;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .quiz-header h2 {
+            color: var(--imdb-text);
+            font-size: 1.5rem;
+        }
+
+        .score {
+            background-color: #2a2a2a;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+        }
+
+        .score span {
+            color: var(--imdb-accent);
+        }
+
+        /* Flashcard styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .flashcard-front {
+            background-color: #2a2a2a;
+            color: var(--imdb-text);
+        }
+
+        .flashcard-back {
+            background-color: #333;
+            color: var(--imdb-text);
+            transform: rotateY(180deg);
+        }
+
+        .question {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .instructions {
+            color: var(--imdb-text-secondary);
+            font-size: 1rem;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Multiple choice styling */
+        .multiple-choice-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .multiple-choice-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .choice-btn {
+            background-color: #2a2a2a;
+            color: var(--imdb-text);
+            border: 1px solid #444;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            font-size: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .choice-btn:hover {
+            background-color: #333;
+            border-color: var(--imdb-accent);
+        }
+
+        .choice-btn.correct {
+            background-color: #2e7d32;
+            border-color: #4caf50;
+        }
+
+        .choice-btn.incorrect {
+            background-color: #c62828;
+            border-color: #f44336;
+        }
+
+        /* Result styling */
+        .result-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .result-correct {
+            color: #4caf50;
+        }
+
+        .result-incorrect {
+            color: #f44336;
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .result-details {
+            color: var(--imdb-text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .next-btn {
+            margin-top: 20px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: var(--imdb-text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .element-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #2a2a2a;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            color: var(--imdb-text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Periodiek Systeem Flashcards</h1>
+            <p class="subtitle">Leer de elementen van het periodiek systeem - Namen en Symbolen</p>
+        </header>
+
+        <div class="main-content">
+            <div class="config-panel">
+                <h2>Quiz Instellingen</h2>
+                
+                <div class="form-group">
+                    <label for="quiz-mode">Quiz Modus</label>
+                    <select id="quiz-mode">
+                        <option value="name-to-symbol">Naam → Symbool</option>
+                        <option value="symbol-to-name">Symbool → Naam</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="question-type">Vraag Type</label>
+                    <select id="question-type">
+                        <option value="flashcard">Flashcard (omdraaien)</option>
+                        <option value="multiple-choice">Meerkeuze</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="question-count">Aantal vragen (max 118)</label>
+                    <input type="number" id="question-count" min="1" max="118" value="10">
+                </div>
+
+                <div class="button-group">
+                    <button id="start-btn">Start Quiz</button>
+                    <button id="reset-btn" class="secondary-btn">Reset Score</button>
+                </div>
+            </div>
+
+            <div class="quiz-panel">
+                <div class="quiz-header">
+                    <h2>Periodiek Systeem Quiz</h2>
+                    <div class="score">
+                        Score: <span id="correct-count">0</span> / <span id="total-count">0</span>
+                    </div>
+                </div>
+
+                <div id="quiz-content">
+                    <!-- Flashcard view -->
+                    <div id="flashcard-view" class="hidden">
+                        <div class="flashcard-container">
+                            <div class="flashcard" id="flashcard">
+                                <div class="flashcard-front">
+                                    <div class="question" id="flashcard-question">?</div>
+                                    <p class="instructions">Klik om het antwoord te zien</p>
+                                </div>
+                                <div class="flashcard-back">
+                                    <div class="question" id="flashcard-answer">!</div>
+                                    <p class="instructions">Klik om verder te gaan</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="element-info">
+                            Categorie: <span id="element-category">-</span> | Atoomnummer: <span id="element-number">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Multiple choice view -->
+                    <div id="multiple-choice-view" class="hidden">
+                        <div class="question" id="mc-question">Vraag komt hier</div>
+                        <div class="multiple-choice-container" id="choices-container">
+                            <!-- Choice buttons will be added here dynamically -->
+                        </div>
+                        <div class="element-info">
+                            Categorie: <span id="mc-category">-</span> | Atoomnummer: <span id="mc-number">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Result view -->
+                    <div id="result-view" class="hidden">
+                        <div class="result-container">
+                            <div class="result-icon" id="result-icon">?</div>
+                            <div class="result-text" id="result-text">Resultaat</div>
+                            <div class="result-details" id="result-details">Details</div>
+                            <button id="next-btn" class="next-btn">Volgende Vraag</button>
+                        </div>
+                    </div>
+
+                    <!-- Start view -->
+                    <div id="start-view">
+                        <div class="result-container">
+                            <div class="result-icon">🧪</div>
+                            <div class="result-text">Klaar om te leren?</div>
+                            <div class="result-details">
+                                <p>Stel je quiz in en klik op "Start Quiz" om te beginnen.</p>
+                                <p>Er zijn 118 elementen in het periodiek systeem om te leren!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Periodiek Systeem Flashcards &copy; 2023 | Gebaseerd op de IMDb-stijl</p>
+        </footer>
+    </div>
+
+    <script>
+        // Data uit atomen.json - hardcoded
+        const atomen = [
+            {"atoomnummer": 1, "symbool": "H", "naam": "Waterstof", "categorie": "Niet-metalen"},
+            {"atoomnummer": 2, "symbool": "He", "naam": "Helium", "categorie": "Edelgassen"},
+            {"atoomnummer": 3, "symbool": "Li", "naam": "Lithium", "categorie": "Alkalimetalen"},
+            {"atoomnummer": 4, "symbool": "Be", "naam": "Beryllium", "categorie": "Aardalkalimetalen"},
+            {"atoomnummer": 5, "symbool": "B", "naam": "Boor", "categorie": "Metalloïden"},
+            {"atoomnummer": 6, "symbool": "C", "naam": "Koolstof", "categorie": "Niet-metalen"},
+            {"atoomnummer": 7, "symbool": "N", "naam": "Stikstof", "categorie": "Niet-metalen"},
+            {"atoomnummer": 8, "symbool": "O", "naam": "Zuurstof", "categorie": "Niet-metalen"},
+            {"atoomnummer": 9, "symbool": "F", "naam": "Fluor", "categorie": "Halogenen"},
+            {"atoomnummer": 10, "symbool": "Ne", "naam": "Neon", "categorie": "Edelgassen"},
+            {"atoomnummer": 11, "symbool": "Na", "naam": "Natrium", "categorie": "Alkalimetalen"},
+            {"atoomnummer": 12, "symbool": "Mg", "naam": "Magnesium", "categorie": "Aardalkalimetalen"},
+            {"atoomnummer": 13, "symbool": "Al", "naam": "Aluminium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 14, "symbool": "Si", "naam": "Silicium", "categorie": "Metalloïden"},
+            {"atoomnummer": 15, "symbool": "P", "naam": "Fosfor", "categorie": "Niet-metalen"},
+            {"atoomnummer": 16, "symbool": "S", "naam": "Zwavel", "categorie": "Niet-metalen"},
+            {"atoomnummer": 17, "symbool": "Cl", "naam": "Chloor", "categorie": "Halogenen"},
+            {"atoomnummer": 18, "symbool": "Ar", "naam": "Argon", "categorie": "Edelgassen"},
+            {"atoomnummer": 19, "symbool": "K", "naam": "Kalium", "categorie": "Alkalimetalen"},
+            {"atoomnummer": 20, "symbool": "Ca", "naam": "Calcium", "categorie": "Aardalkalimetalen"},
+            {"atoomnummer": 21, "symbool": "Sc", "naam": "Scandium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 22, "symbool": "Ti", "naam": "Titanium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 23, "symbool": "V", "naam": "Vanadium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 24, "symbool": "Cr", "naam": "Chroom", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 25, "symbool": "Mn", "naam": "Mangaan", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 26, "symbool": "Fe", "naam": "IJzer", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 27, "symbool": "Co", "naam": "Kobalt", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 28, "symbool": "Ni", "naam": "Nikkel", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 29, "symbool": "Cu", "naam": "Koper", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 30, "symbool": "Zn", "naam": "Zink", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 31, "symbool": "Ga", "naam": "Gallium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 32, "symbool": "Ge", "naam": "Germanium", "categorie": "Metalloïden"},
+            {"atoomnummer": 33, "symbool": "As", "naam": "Arseen", "categorie": "Metalloïden"},
+            {"atoomnummer": 34, "symbool": "Se", "naam": "Seleen", "categorie": "Niet-metalen"},
+            {"atoomnummer": 35, "symbool": "Br", "naam": "Broom", "categorie": "Halogenen"},
+            {"atoomnummer": 36, "symbool": "Kr", "naam": "Krypton", "categorie": "Edelgassen"},
+            {"atoomnummer": 37, "symbool": "Rb", "naam": "Rubidium", "categorie": "Alkalimetalen"},
+            {"atoomnummer": 38, "symbool": "Sr", "naam": "Strontium", "categorie": "Aardalkalimetalen"},
+            {"atoomnummer": 39, "symbool": "Y", "naam": "Yttrium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 40, "symbool": "Zr", "naam": "Zirkonium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 41, "symbool": "Nb", "naam": "Niobium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 42, "symbool": "Mo", "naam": "Molybdeen", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 43, "symbool": "Tc", "naam": "Technetium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 44, "symbool": "Ru", "naam": "Ruthenium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 45, "symbool": "Rh", "naam": "Rhodium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 46, "symbool": "Pd", "naam": "Palladium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 47, "symbool": "Ag", "naam": "Zilver", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 48, "symbool": "Cd", "naam": "Cadmium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 49, "symbool": "In", "naam": "Indium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 50, "symbool": "Sn", "naam": "Tin", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 51, "symbool": "Sb", "naam": "Antimoon", "categorie": "Metalloïden"},
+            {"atoomnummer": 52, "symbool": "Te", "naam": "Telluur", "categorie": "Metalloïden"},
+            {"atoomnummer": 53, "symbool": "I", "naam": "Jood", "categorie": "Halogenen"},
+            {"atoomnummer": 54, "symbool": "Xe", "naam": "Xenon", "categorie": "Edelgassen"},
+            {"atoomnummer": 55, "symbool": "Cs", "naam": "Cesium", "categorie": "Alkalimetalen"},
+            {"atoomnummer": 56, "symbool": "Ba", "naam": "Barium", "categorie": "Aardalkalimetalen"},
+            {"atoomnummer": 57, "symbool": "La", "naam": "Lanthaan", "categorie": "Lanthaniden"},
+            {"atoomnummer": 58, "symbool": "Ce", "naam": "Cerium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 59, "symbool": "Pr", "naam": "Praseodymium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 60, "symbool": "Nd", "naam": "Neodymium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 61, "symbool": "Pm", "naam": "Promethium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 62, "symbool": "Sm", "naam": "Samarium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 63, "symbool": "Eu", "naam": "Europium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 64, "symbool": "Gd", "naam": "Gadolinium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 65, "symbool": "Tb", "naam": "Terbium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 66, "symbool": "Dy", "naam": "Dysprosium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 67, "symbool": "Ho", "naam": "Holmium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 68, "symbool": "Er", "naam": "Erbium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 69, "symbool": "Tm", "naam": "Thulium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 70, "symbool": "Yb", "naam": "Ytterbium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 71, "symbool": "Lu", "naam": "Lutetium", "categorie": "Lanthaniden"},
+            {"atoomnummer": 72, "symbool": "Hf", "naam": "Hafnium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 73, "symbool": "Ta", "naam": "Tantaal", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 74, "symbool": "W", "naam": "Wolfraam", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 75, "symbool": "Re", "naam": "Rhenium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 76, "symbool": "Os", "naam": "Osmium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 77, "symbool": "Ir", "naam": "Iridium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 78, "symbool": "Pt", "naam": "Platina", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 79, "symbool": "Au", "naam": "Goud", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 80, "symbool": "Hg", "naam": "Kwik", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 81, "symbool": "Tl", "naam": "Thallium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 82, "symbool": "Pb", "naam": "Lood", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 83, "symbool": "Bi", "naam": "Bismut", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 84, "symbool": "Po", "naam": "Polonium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 85, "symbool": "At", "naam": "Astaat", "categorie": "Halogenen"},
+            {"atoomnummer": 86, "symbool": "Rn", "naam": "Radon", "categorie": "Edelgassen"},
+            {"atoomnummer": 87, "symbool": "Fr", "naam": "Francium", "categorie": "Alkalimetalen"},
+            {"atoomnummer": 88, "symbool": "Ra", "naam": "Radium", "categorie": "Aardalkalimetalen"},
+            {"atoomnummer": 89, "symbool": "Ac", "naam": "Actinium", "categorie": "Actiniden"},
+            {"atoomnummer": 90, "symbool": "Th", "naam": "Thorium", "categorie": "Actiniden"},
+            {"atoomnummer": 91, "symbool": "Pa", "naam": "Protactinium", "categorie": "Actiniden"},
+            {"atoomnummer": 92, "symbool": "U", "naam": "Uraan", "categorie": "Actiniden"},
+            {"atoomnummer": 93, "symbool": "Np", "naam": "Neptunium", "categorie": "Actiniden"},
+            {"atoomnummer": 94, "symbool": "Pu", "naam": "Plutonium", "categorie": "Actiniden"},
+            {"atoomnummer": 95, "symbool": "Am", "naam": "Americium", "categorie": "Actiniden"},
+            {"atoomnummer": 96, "symbool": "Cm", "naam": "Curium", "categorie": "Actiniden"},
+            {"atoomnummer": 97, "symbool": "Bk", "naam": "Berkelium", "categorie": "Actiniden"},
+            {"atoomnummer": 98, "symbool": "Cf", "naam": "Californium", "categorie": "Actiniden"},
+            {"atoomnummer": 99, "symbool": "Es", "naam": "Einsteinium", "categorie": "Actiniden"},
+            {"atoomnummer": 100, "symbool": "Fm", "naam": "Fermium", "categorie": "Actiniden"},
+            {"atoomnummer": 101, "symbool": "Md", "naam": "Mendelevium", "categorie": "Actiniden"},
+            {"atoomnummer": 102, "symbool": "No", "naam": "Nobelium", "categorie": "Actiniden"},
+            {"atoomnummer": 103, "symbool": "Lr", "naam": "Lawrencium", "categorie": "Actiniden"},
+            {"atoomnummer": 104, "symbool": "Rf", "naam": "Rutherfordium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 105, "symbool": "Db", "naam": "Dubnium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 106, "symbool": "Sg", "naam": "Seaborgium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 107, "symbool": "Bh", "naam": "Bohrium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 108, "symbool": "Hs", "naam": "Hassium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 109, "symbool": "Mt", "naam": "Meitnerium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 110, "symbool": "Ds", "naam": "Darmstadtium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 111, "symbool": "Rg", "naam": "Roentgenium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 112, "symbool": "Cn", "naam": "Copernicium", "categorie": "Overgangsmetalen"},
+            {"atoomnummer": 113, "symbool": "Nh", "naam": "Nihonium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 114, "symbool": "Fl", "naam": "Flerovium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 115, "symbool": "Mc", "naam": "Moscovium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 116, "symbool": "Lv", "naam": "Livermorium", "categorie": "Post-transitiemetalen"},
+            {"atoomnummer": 117, "symbool": "Ts", "naam": "Tennessine", "categorie": "Halogenen"},
+            {"atoomnummer": 118, "symbool": "Og", "naam": "Oganesson", "categorie": "Edelgassen"}
+        ];
+
+        // Quiz state
+        let quizState = {
+            currentQuestion: 0,
+            score: 0,
+            totalQuestions: 0,
+            questions: [],
+            isAnswered: false,
+            quizMode: 'name-to-symbol',
+            questionType: 'flashcard'
+        };
+
+        // DOM Elements
+        const startView = document.getElementById('start-view');
+        const flashcardView = document.getElementById('flashcard-view');
+        const multipleChoiceView = document.getElementById('multiple-choice-view');
+        const resultView = document.getElementById('result-view');
+        
+        const flashcard = document.getElementById('flashcard');
+        const flashcardQuestion = document.getElementById('flashcard-question');
+        const flashcardAnswer = document.getElementById('flashcard-answer');
+        const elementCategory = document.getElementById('element-category');
+        const elementNumber = document.getElementById('element-number');
+        
+        const mcQuestion = document.getElementById('mc-question');
+        const choicesContainer = document.getElementById('choices-container');
+        const mcCategory = document.getElementById('mc-category');
+        const mcNumber = document.getElementById('mc-number');
+        
+        const resultIcon = document.getElementById('result-icon');
+        const resultText = document.getElementById('result-text');
+        const resultDetails = document.getElementById('result-details');
+        
+        const correctCount = document.getElementById('correct-count');
+        const totalCount = document.getElementById('total-count');
+        
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const quizModeSelect = document.getElementById('quiz-mode');
+        const questionTypeSelect = document.getElementById('question-type');
+        const questionCountInput = document.getElementById('question-count');
+
+        // Event Listeners
+        startBtn.addEventListener('click', startQuiz);
+        resetBtn.addEventListener('click', resetScore);
+        nextBtn.addEventListener('click', nextQuestion);
+        flashcard.addEventListener('click', handleFlashcardClick);
+
+        // Initialize
+        function init() {
+            updateScoreDisplay();
+            showView(startView);
+        }
+
+        // Start quiz
+        function startQuiz() {
+            // Reset quiz state
+            quizState.currentQuestion = 0;
+            quizState.score = 0;
+            quizState.isAnswered = false;
+            quizState.quizMode = quizModeSelect.value;
+            quizState.questionType = questionTypeSelect.value;
+            
+            // Get number of questions
+            const questionCount = Math.min(parseInt(questionCountInput.value) || 10, atomen.length);
+            quizState.totalQuestions = questionCount;
+            
+            // Generate random questions
+            quizState.questions = generateRandomQuestions(questionCount);
+            
+            // Update display
+            updateScoreDisplay();
+            loadQuestion();
+        }
+
+        // Generate random questions
+        function generateRandomQuestions(count) {
+            // Create a shuffled copy of the elements
+            const shuffled = [...atomen].sort(() => 0.5 - Math.random());
+            
+            // Take the first 'count' elements
+            return shuffled.slice(0, count).map(element => ({
+                element: element,
+                correctAnswer: quizState.quizMode === 'name-to-symbol' ? element.symbool : element.naam,
+                question: quizState.quizMode === 'name-to-symbol' ? element.naam : element.symbool
+            }));
+        }
+
+        // Load current question
+        function loadQuestion() {
+            if (quizState.currentQuestion >= quizState.totalQuestions) {
+                endQuiz();
+                return;
+            }
+            
+            const question = quizState.questions[quizState.currentQuestion];
+            quizState.isAnswered = false;
+            
+            // Update info display
+            elementCategory.textContent = question.element.categorie;
+            elementNumber.textContent = question.element.atoomnummer;
+            mcCategory.textContent = question.element.categorie;
+            mcNumber.textContent = question.element.atoomnummer;
+            
+            // Show appropriate view based on question type
+            if (quizState.questionType === 'flashcard') {
+                showView(flashcardView);
+                flashcardQuestion.textContent = question.question;
+                flashcardAnswer.textContent = question.correctAnswer;
+                flashcard.classList.remove('flipped');
+            } else {
+                showView(multipleChoiceView);
+                mcQuestion.textContent = `Wat is het ${quizState.quizMode === 'name-to-symbol' ? 'symbool' : 'element'} voor: ${question.question}?`;
+                generateMultipleChoice(question);
+            }
+        }
+
+        // Generate multiple choice options
+        function generateMultipleChoice(currentQuestion) {
+            // Clear previous choices
+            choicesContainer.innerHTML = '';
+            
+            // Create an array of possible answers
+            const answers = [currentQuestion.correctAnswer];
+            
+            // Add 3 random wrong answers
+            while (answers.length < 4) {
+                let randomElement;
+                if (quizState.quizMode === 'name-to-symbol') {
+                    randomElement = atomen[Math.floor(Math.random() * atomen.length)].symbool;
+                } else {
+                    randomElement = atomen[Math.floor(Math.random() * atomen.length)].naam;
+                }
+                
+                // Make sure we don't duplicate answers
+                if (!answers.includes(randomElement)) {
+                    answers.push(randomElement);
+                }
+            }
+            
+            // Shuffle the answers
+            answers.sort(() => 0.5 - Math.random());
+            
+            // Create buttons for each answer
+            answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = answer;
+                button.addEventListener('click', () => checkAnswer(answer, currentQuestion.correctAnswer));
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        // Check answer for multiple choice
+        function checkAnswer(selectedAnswer, correctAnswer) {
+            if (quizState.isAnswered) return;
+            
+            quizState.isAnswered = true;
+            const isCorrect = selectedAnswer === correctAnswer;
+            
+            // Update score
+            if (isCorrect) {
+                quizState.score++;
+            }
+            
+            // Update score display
+            updateScoreDisplay();
+            
+            // Show result
+            showResult(isCorrect, selectedAnswer, correctAnswer);
+        }
+
+        // Handle flashcard click
+        function handleFlashcardClick() {
+            if (!quizState.isAnswered) {
+                // First click - flip to show answer
+                flashcard.classList.add('flipped');
+                quizState.isAnswered = true;
+            } else {
+                // Second click - show result
+                showResult(true, '', '');
+            }
+        }
+
+        // Show result
+        function showResult(isCorrect, selectedAnswer, correctAnswer) {
+            if (quizState.questionType === 'flashcard' && isCorrect) {
+                // For flashcards, we always count as correct if they viewed it
+                quizState.score++;
+                updateScoreDisplay();
+            }
+            
+            // Set result content
+            if (isCorrect) {
+                resultIcon.textContent = '✓';
+                resultIcon.className = 'result-icon result-correct';
+                resultText.textContent = 'Goed gedaan!';
+                resultDetails.textContent = quizState.questionType === 'flashcard' 
+                    ? `Het antwoord is: ${quizState.questions[quizState.currentQuestion].correctAnswer}`
+                    : 'Je antwoord is correct!';
+            } else {
+                resultIcon.textContent = '✗';
+                resultIcon.className = 'result-icon result-incorrect';
+                resultText.textContent = 'Helaas!';
+                resultDetails.textContent = `Het juiste antwoord is: ${correctAnswer}`;
+            }
+            
+            showView(resultView);
+        }
+
+        // Next question
+        function nextQuestion() {
+            quizState.currentQuestion++;
+            loadQuestion();
+        }
+
+        // End quiz
+        function endQuiz() {
+            resultIcon.textContent = '🏆';
+            resultIcon.className = 'result-icon';
+            resultText.textContent = 'Quiz voltooid!';
+            resultDetails.textContent = `Je score: ${quizState.score} van de ${quizState.totalQuestions} vragen correct (${Math.round(quizState.score / quizState.totalQuestions * 100)}%)`;
+            nextBtn.textContent = 'Nieuwe Quiz Starten';
+            nextBtn.onclick = () => {
+                nextBtn.textContent = 'Volgende Vraag';
+                nextBtn.onclick = nextQuestion;
+                startQuiz();
+            };
+            showView(resultView);
+        }
+
+        // Reset score
+        function resetScore() {
+            quizState.score = 0;
+            quizState.totalQuestions = 0;
+            updateScoreDisplay();
+            showView(startView);
+        }
+
+        // Update score display
+        function updateScoreDisplay() {
+            correctCount.textContent = quizState.score;
+            totalCount.textContent = quizState.totalQuestions;
+        }
+
+        // Show a specific view and hide others
+        function showView(view) {
+            // Hide all views
+            startView.classList.add('hidden');
+            flashcardView.classList.add('hidden');
+            multipleChoiceView.classList.add('hidden');
+            resultView.classList.add('hidden');
+            
+            // Show requested view
+            view.classList.remove('hidden');
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDb Elements - Periodiek Systeem</title>
+    <style>
+        /* IMDb Visuele Stijl */
+        :root {
+            --imdb-black: #000000;
+            --imdb-dark-grey: #121212;
+            --imdb-card-bg: #1a1a1a;
+            --imdb-yellow: #f5c518;
+            --imdb-text: #ffffff;
+            --imdb-text-secondary: #b3b3b3;
+            --font-main: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            
+            /* Kleuren voor categorieën */
+            --cat-niet-metalen: #2d4c2d;
+            --cat-edelgassen: #4c2d4c;
+            --cat-alkalimetalen: #4c2d2d;
+            --cat-aardalkalimetalen: #4c3e2d;
+            --cat-metalloïden: #2d4c4c;
+            --cat-halogenen: #2d384c;
+            --cat-post-transitie: #4c4c2d;
+            --cat-overgangsmetalen: #3e3e3e;
+            --cat-lanthaniden: #3d2d4c;
+            --cat-actiniden: #4c2d3d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--imdb-black);
+            color: var(--imdb-text);
+            font-family: var(--font-main);
+            line-height: 1.5;
+            padding-bottom: 50px;
+        }
+
+        /* Header & Zoekfunctie */
+        header {
+            background-color: var(--imdb-dark-grey);
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+        }
+
+        .logo {
+            background-color: var(--imdb-yellow);
+            color: var(--imdb-black);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .search-container {
+            flex-grow: 1;
+            margin: 0 40px;
+            max-width: 800px;
+            position: relative;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: none;
+            background-color: white;
+            font-size: 1rem;
+        }
+
+        /* Periodiek Systeem Grid */
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 30px auto;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            grid-gap: 5px;
+            margin-bottom: 40px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .element-card {
+            background-color: var(--imdb-card-bg);
+            border: 1px solid #333;
+            aspect-ratio: 1/1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            padding: 4px;
+        }
+
+        .element-card:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            border-color: var(--imdb-yellow);
+        }
+
+        .element-card .atomic-number {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            font-size: 0.6rem;
+            color: var(--imdb-text-secondary);
+        }
+
+        .element-card .symbol {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .element-card .name {
+            font-size: 0.55rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Detail Paneel */
+        #detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .detail-card {
+            background-color: var(--imdb-dark-grey);
+            border: 1px solid #333;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .detail-header {
+            padding: 20px;
+            background-color: var(--imdb-card-bg);
+            border-bottom: 4px solid var(--imdb-yellow);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detail-title h2 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .detail-subtitle {
+            color: var(--imdb-yellow);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .detail-body {
+            padding: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+
+        .info-label {
+            color: var(--imdb-text-secondary);
+            font-size: 0.8rem;
+            display: block;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--imdb-text);
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        /* Categorie Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--imdb-card-bg);
+            border-radius: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--imdb-text-secondary);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .periodic-table {
+                grid-gap: 2px;
+            }
+            .element-card .symbol { font-size: 0.9rem; }
+            .element-card .name { display: none; }
+        }
+
+        /* Filter highlight */
+        .dimmed {
+            opacity: 0.15;
+            filter: grayscale(1);
+        }
+
+        .highlight {
+            border-color: var(--imdb-yellow);
+            box-shadow: 0 0 10px var(--imdb-yellow);
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="#" class="logo">IMDb Elements</a>
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Zoek op naam, symbool, nummer of categorie...">
+    </div>
+</header>
+
+<div class="container">
+    <div class="periodic-table" id="table-grid">
+        <!-- Tabel wordt gevuld via JS -->
+    </div>
+
+    <div class="legend" id="legend-container">
+        <!-- Legenda wordt gevuld via JS -->
+    </div>
+</div>
+
+<div id="detail-overlay" onclick="closeDetail()">
+    <div class="detail-card" onclick="event.stopPropagation()">
+        <div class="detail-header">
+            <div class="detail-title">
+                <span class="detail-subtitle" id="det-cat">Categorie</span>
+                <h2 id="det-name">Naam</h2>
+            </div>
+            <button class="close-btn" onclick="closeDetail()">&times;</button>
+        </div>
+        <div class="detail-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Atoomnummer</span>
+                    <span class="info-value" id="det-num">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Symbool</span>
+                    <span class="info-value" id="det-sym">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Soort</span>
+                    <span class="info-value" id="det-kind">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Standaardtoestand</span>
+                    <span class="info-value" id="det-state">Niet opgegeven</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inline data uit atomen.json
+    const elementenData = [
+        {"atoomnummer": 1, "symbool": "H", "naam": "Waterstof", "categorie": "Niet-metalen"},
+        {"atoomnummer": 2, "symbool": "He", "naam": "Helium", "categorie": "Edelgassen"},
+        {"atoomnummer": 3, "symbool": "Li", "naam": "Lithium", "categorie": "Alkalimetalen"},
+        {"atoomnummer": 4, "symbool": "Be", "naam": "Beryllium", "categorie": "Aardalkalimetalen"},
+        {"atoomnummer": 5, "symbool": "B", "naam": "Boor", "categorie": "Metalloïden"},
+        {"atoomnummer": 6, "symbool": "C", "naam": "Koolstof", "categorie": "Niet-metalen"},
+        {"atoomnummer": 7, "symbool": "N", "naam": "Stikstof", "categorie": "Niet-metalen"},
+        {"atoomnummer": 8, "symbool": "O", "naam": "Zuurstof", "categorie": "Niet-metalen"},
+        {"atoomnummer": 9, "symbool": "F", "naam": "Fluor", "categorie": "Halogenen"},
+        {"atoomnummer": 10, "symbool": "Ne", "naam": "Neon", "categorie": "Edelgassen"},
+        {"atoomnummer": 11, "symbool": "Na", "naam": "Natrium", "categorie": "Alkalimetalen"},
+        {"atoomnummer": 12, "symbool": "Mg", "naam": "Magnesium", "categorie": "Aardalkalimetalen"},
+        {"atoomnummer": 13, "symbool": "Al", "naam": "Aluminium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 14, "symbool": "Si", "naam": "Silicium", "categorie": "Metalloïden"},
+        {"atoomnummer": 15, "symbool": "P", "naam": "Fosfor", "categorie": "Niet-metalen"},
+        {"atoomnummer": 16, "symbool": "S", "naam": "Zwavel", "categorie": "Niet-metalen"},
+        {"atoomnummer": 17, "symbool": "Cl", "naam": "Chloor", "categorie": "Halogenen"},
+        {"atoomnummer": 18, "symbool": "Ar", "naam": "Argon", "categorie": "Edelgassen"},
+        {"atoomnummer": 19, "symbool": "K", "naam": "Kalium", "categorie": "Alkalimetalen"},
+        {"atoomnummer": 20, "symbool": "Ca", "naam": "Calcium", "categorie": "Aardalkalimetalen"},
+        {"atoomnummer": 21, "symbool": "Sc", "naam": "Scandium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 22, "symbool": "Ti", "naam": "Titanium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 23, "symbool": "V", "naam": "Vanadium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 24, "symbool": "Cr", "naam": "Chroom", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 25, "symbool": "Mn", "naam": "Mangaan", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 26, "symbool": "Fe", "naam": "IJzer", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 27, "symbool": "Co", "naam": "Kobalt", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 28, "symbool": "Ni", "naam": "Nikkel", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 29, "symbool": "Cu", "naam": "Koper", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 30, "symbool": "Zn", "naam": "Zink", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 31, "symbool": "Ga", "naam": "Gallium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 32, "symbool": "Ge", "naam": "Germanium", "categorie": "Metalloïden"},
+        {"atoomnummer": 33, "symbool": "As", "naam": "Arseen", "categorie": "Metalloïden"},
+        {"atoomnummer": 34, "symbool": "Se", "naam": "Seleen", "categorie": "Niet-metalen"},
+        {"atoomnummer": 35, "symbool": "Br", "naam": "Broom", "categorie": "Halogenen"},
+        {"atoomnummer": 36, "symbool": "Kr", "naam": "Krypton", "categorie": "Edelgassen"},
+        {"atoomnummer": 37, "symbool": "Rb", "naam": "Rubidium", "categorie": "Alkalimetalen"},
+        {"atoomnummer": 38, "symbool": "Sr", "naam": "Strontium", "categorie": "Aardalkalimetalen"},
+        {"atoomnummer": 39, "symbool": "Y", "naam": "Yttrium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 40, "symbool": "Zr", "naam": "Zirkonium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 41, "symbool": "Nb", "naam": "Niobium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 42, "symbool": "Mo", "naam": "Molybdeen", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 43, "symbool": "Tc", "naam": "Technetium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 44, "symbool": "Ru", "naam": "Ruthenium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 45, "symbool": "Rh", "naam": "Rhodium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 46, "symbool": "Pd", "naam": "Palladium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 47, "symbool": "Ag", "naam": "Zilver", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 48, "symbool": "Cd", "naam": "Cadmium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 49, "symbool": "In", "naam": "Indium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 50, "symbool": "Sn", "naam": "Tin", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 51, "symbool": "Sb", "naam": "Antimoon", "categorie": "Metalloïden"},
+        {"atoomnummer": 52, "symbool": "Te", "naam": "Telluur", "categorie": "Metalloïden"},
+        {"atoomnummer": 53, "symbool": "I", "naam": "Jood", "categorie": "Halogenen"},
+        {"atoomnummer": 54, "symbool": "Xe", "naam": "Xenon", "categorie": "Edelgassen"},
+        {"atoomnummer": 55, "symbool": "Cs", "naam": "Cesium", "categorie": "Alkalimetalen"},
+        {"atoomnummer": 56, "symbool": "Ba", "naam": "Barium", "categorie": "Aardalkalimetalen"},
+        {"atoomnummer": 57, "symbool": "La", "naam": "Lanthaan", "categorie": "Lanthaniden"},
+        {"atoomnummer": 58, "symbool": "Ce", "naam": "Cerium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 59, "symbool": "Pr", "naam": "Praseodymium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 60, "symbool": "Nd", "naam": "Neodymium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 61, "symbool": "Pm", "naam": "Promethium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 62, "symbool": "Sm", "naam": "Samarium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 63, "symbool": "Eu", "naam": "Europium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 64, "symbool": "Gd", "naam": "Gadolinium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 65, "symbool": "Tb", "naam": "Terbium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 66, "symbool": "Dy", "naam": "Dysprosium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 67, "symbool": "Ho", "naam": "Holmium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 68, "symbool": "Er", "naam": "Erbium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 69, "symbool": "Tm", "naam": "Thulium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 70, "symbool": "Yb", "naam": "Ytterbium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 71, "symbool": "Lu", "naam": "Lutetium", "categorie": "Lanthaniden"},
+        {"atoomnummer": 72, "symbool": "Hf", "naam": "Hafnium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 73, "symbool": "Ta", "naam": "Tantaal", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 74, "symbool": "W", "naam": "Wolfraam", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 75, "symbool": "Re", "naam": "Rhenium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 76, "symbool": "Os", "naam": "Osmium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 77, "symbool": "Ir", "naam": "Iridium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 78, "symbool": "Pt", "naam": "Platina", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 79, "symbool": "Au", "naam": "Goud", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 80, "symbool": "Hg", "naam": "Kwik", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 81, "symbool": "Tl", "naam": "Thallium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 82, "symbool": "Pb", "naam": "Lood", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 83, "symbool": "Bi", "naam": "Bismut", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 84, "symbool": "Po", "naam": "Polonium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 85, "symbool": "At", "naam": "Astaat", "categorie": "Halogenen"},
+        {"atoomnummer": 86, "symbool": "Rn", "naam": "Radon", "categorie": "Edelgassen"},
+        {"atoomnummer": 87, "symbool": "Fr", "naam": "Francium", "categorie": "Alkalimetalen"},
+        {"atoomnummer": 88, "symbool": "Ra", "naam": "Radium", "categorie": "Aardalkalimetalen"},
+        {"atoomnummer": 89, "symbool": "Ac", "naam": "Actinium", "categorie": "Actiniden"},
+        {"atoomnummer": 90, "symbool": "Th", "naam": "Thorium", "categorie": "Actiniden"},
+        {"atoomnummer": 91, "symbool": "Pa", "naam": "Protactinium", "categorie": "Actiniden"},
+        {"atoomnummer": 92, "symbool": "U", "naam": "Uraan", "categorie": "Actiniden"},
+        {"atoomnummer": 93, "symbool": "Np", "naam": "Neptunium", "categorie": "Actiniden"},
+        {"atoomnummer": 94, "symbool": "Pu", "naam": "Plutonium", "categorie": "Actiniden"},
+        {"atoomnummer": 95, "symbool": "Am", "naam": "Americium", "categorie": "Actiniden"},
+        {"atoomnummer": 96, "symbool": "Cm", "naam": "Curium", "categorie": "Actiniden"},
+        {"atoomnummer": 97, "symbool": "Bk", "naam": "Berkelium", "categorie": "Actiniden"},
+        {"atoomnummer": 98, "symbool": "Cf", "naam": "Californium", "categorie": "Actiniden"},
+        {"atoomnummer": 99, "symbool": "Es", "naam": "Einsteinium", "categorie": "Actiniden"},
+        {"atoomnummer": 100, "symbool": "Fm", "naam": "Fermium", "categorie": "Actiniden"},
+        {"atoomnummer": 101, "symbool": "Md", "naam": "Mendelevium", "categorie": "Actiniden"},
+        {"atoomnummer": 102, "symbool": "No", "naam": "Nobelium", "categorie": "Actiniden"},
+        {"atoomnummer": 103, "symbool": "Lr", "naam": "Lawrencium", "categorie": "Actiniden"},
+        {"atoomnummer": 104, "symbool": "Rf", "naam": "Rutherfordium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 105, "symbool": "Db", "naam": "Dubnium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 106, "symbool": "Sg", "naam": "Seaborgium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 107, "symbool": "Bh", "naam": "Bohrium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 108, "symbool": "Hs", "naam": "Hassium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 109, "symbool": "Mt", "naam": "Meitnerium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 110, "symbool": "Ds", "naam": "Darmstadtium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 111, "symbool": "Rg", "naam": "Roentgenium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 112, "symbool": "Cn", "naam": "Copernicium", "categorie": "Overgangsmetalen"},
+        {"atoomnummer": 113, "symbool": "Nh", "naam": "Nihonium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 114, "symbool": "Fl", "naam": "Flerovium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 115, "symbool": "Mc", "naam": "Moscovium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 116, "symbool": "Lv", "naam": "Livermorium", "categorie": "Post-transitiemetalen"},
+        {"atoomnummer": 117, "symbool": "Ts", "naam": "Tennessine", "categorie": "Halogenen"},
+        {"atoomnummer": 118, "symbool": "Og", "naam": "Oganesson", "categorie": "Edelgassen"}
+    ];
+
+    // Map categorie naar CSS variabelen
+    const categorieKleuren = {
+        "Niet-metalen": "var(--cat-niet-metalen)",
+        "Edelgassen": "var(--cat-edelgassen)",
+        "Alkalimetalen": "var(--cat-alkalimetalen)",
+        "Aardalkalimetalen": "var(--cat-aardalkalimetalen)",
+        "Metalloïden": "var(--cat-metalloïden)",
+        "Halogenen": "var(--cat-halogenen)",
+        "Post-transitiemetalen": "var(--cat-post-transitie)",
+        "Overgangsmetalen": "var(--cat-overgangsmetalen)",
+        "Lanthaniden": "var(--cat-lanthaniden)",
+        "Actiniden": "var(--cat-actiniden)"
+    };
+
+    // Coördinaten tabel (Rij, Kolom)
+    function getElementPos(num) {
+        if (num === 1) return [1, 1];
+        if (num === 2) return [1, 18];
+        if (num >= 3 && num <= 4) return [2, num - 2];
+        if (num >= 5 && num <= 10) return [2, num + 8];
+        if (num >= 11 && num <= 12) return [3, num - 10];
+        if (num >= 13 && num <= 18) return [3, num];
+        if (num >= 19 && num <= 36) return [4, num - 18];
+        if (num >= 37 && num <= 54) return [5, num - 36];
+        if (num >= 55 && num <= 56) return [6, num - 54];
+        if (num >= 72 && num <= 86) return [6, num - 68];
+        if (num >= 87 && num <= 88) return [7, num - 86];
+        if (num >= 104 && num <= 118) return [7, num - 100];
+        
+        // Lanthaniden (onderaan)
+        if (num >= 57 && num <= 71) return [9, num - 53];
+        // Actiniden (onderaan)
+        if (num >= 89 && num <= 103) return [10, num - 85];
+        
+        return [0,0];
+    }
+
+    const grid = document.getElementById('table-grid');
+    const searchInput = document.getElementById('search-input');
+    const overlay = document.getElementById('detail-overlay');
+
+    // Initialiseer tabel
+    function initTable() {
+        elementenData.forEach(el => {
+            const pos = getElementPos(el.atoomnummer);
+            const card = document.createElement('div');
+            card.className = 'element-card';
+            card.style.gridRow = pos[0];
+            card.style.gridColumn = pos[1];
+            card.style.backgroundColor = categorieKleuren[el.categorie] || '#333';
+            card.setAttribute('data-num', el.atoomnummer);
+            card.onclick = () => showDetail(el);
+
+            card.innerHTML = `
+                <span class="atomic-number">${el.atoomnummer}</span>
+                <span class="symbol">${el.symbool}</span>
+                <span class="name">${el.naam}</span>
+            `;
+
+            grid.appendChild(card);
+        });
+
+        // Legenda vullen
+        const legend = document.getElementById('legend-container');
+        Object.keys(categorieKleuren).forEach(cat => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `
+                <div class="legend-color" style="background:${categorieKleuren[cat]}"></div>
+                <span>${cat}</span>
+            `;
+            legend.appendChild(item);
+        });
+    }
+
+    // Zoekfunctie
+    searchInput.oninput = (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.element-card');
+
+        if (!query) {
+            cards.forEach(c => c.classList.remove('dimmed', 'highlight'));
+            return;
+        }
+
+        cards.forEach(card => {
+            const num = card.getAttribute('data-num');
+            const el = elementenData.find(at => at.atoomnummer == num);
+            
+            const match = el.naam.toLowerCase().includes(query) || 
+                          el.symbool.toLowerCase().includes(query) ||
+                          el.atoomnummer.toString() == query ||
+                          el.categorie.toLowerCase().includes(query);
+
+            if (match) {
+                card.classList.remove('dimmed');
+                card.classList.add('highlight');
+            } else {
+                card.classList.add('dimmed');
+                card.classList.remove('highlight');
+            }
+        });
+    };
+
+    // Detail weergave
+    function showDetail(el) {
+        document.getElementById('det-name').textContent = el.naam;
+        document.getElementById('det-sym').textContent = el.symbool;
+        document.getElementById('det-num').textContent = el.atoomnummer;
+        document.getElementById('det-kind').textContent = el.categorie;
+        document.getElementById('det-cat').textContent = el.categorie;
+        
+        // Simuleer toestandsinformatie (niet in JSON, maar extra feature voor realisme)
+        let toestand = "Vast";
+        if (["H", "He", "N", "O", "F", "Ne", "Cl", "Ar", "Kr", "Xe", "Rn", "Og"].includes(el.symbool)) toestand = "Gas";
+        if (["Hg", "Br"].includes(el.symbool)) toestand = "Vloeibaar";
+        document.getElementById('det-state').textContent = toestand;
+
+        overlay.style.display = 'flex';
+    }
+
+    function closeDetail() {
+        overlay.style.display = 'none';
+    }
+
+    // Escape toets om detail te sluiten
+    document.onkeydown = (e) => {
+        if (e.key === "Escape") closeDetail();
+    };
+
+    window.onload = initTable;
+</script>
+
+</body>
+</html>

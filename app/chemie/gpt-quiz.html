@@ -1,0 +1,1277 @@
+
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Atomen • Flashcards & Quiz</title>
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#171a21;
+      --panel2:#1e2330;
+      --card:#1b1f2a;
+      --text:#e7e9ee;
+      --muted:#a9afbe;
+      --line:#2a3142;
+      --accent:#f5c518; /* IMDb-ish yellow */
+      --good:#19c37d;
+      --bad:#ff4d4f;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius: 14px;
+      --radius2: 18px;
+      --focus: 0 0 0 3px rgba(245,197,24,.25);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 700px at 20% -10%, rgba(245,197,24,.12), transparent 60%),
+        radial-gradient(900px 600px at 90% 10%, rgba(68,95,255,.08), transparent 55%),
+        linear-gradient(180deg, #0c0e12 0%, #0f1115 70%);
+      color:var(--text);
+    }
+
+    /* Top bar (IMDb-ish) */
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      background: rgba(15,17,21,.88);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .topbar-inner{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 230px;
+    }
+    .imdb-chip{
+      background: var(--accent);
+      color:#111;
+      font-weight:900;
+      letter-spacing:.6px;
+      border-radius:6px;
+      padding:6px 10px;
+      line-height:1;
+      box-shadow: 0 6px 18px rgba(245,197,24,.25);
+    }
+    .brand-title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .brand-title strong{ font-size: 14px; letter-spacing:.2px; }
+    .brand-title span{ font-size:12px; color:var(--muted); }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.03);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .dot{ width:8px; height:8px; border-radius:999px; background:var(--accent); box-shadow:0 0 0 3px rgba(245,197,24,.18); }
+
+    .spacer{ flex:1; }
+
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+      font-weight: 650;
+      font-size: 13px;
+    }
+    .btn:hover{ background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.18); }
+    .btn:active{ transform: translateY(1px); }
+    .btn:focus{ outline:none; box-shadow: var(--focus); }
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(245,197,24,.95), rgba(245,197,24,.78));
+      border-color: rgba(245,197,24,.55);
+      color:#111;
+      box-shadow: 0 10px 26px rgba(245,197,24,.18);
+    }
+    .btn.primary:hover{ filter: brightness(1.03); }
+    .btn.ghost{ background: transparent; }
+    .btn.danger{ border-color: rgba(255,77,79,.35); }
+    .btn.danger:hover{ background: rgba(255,77,79,.08); }
+
+    /* Layout */
+    .wrap{ max-width:1100px; margin: 0 auto; padding: 18px 16px 36px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.6fr .9fr;
+      gap: 18px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .brand{ min-width: 0; }
+      .grid{ grid-template-columns: 1fr; }
+      .brand-title span{ display:none; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-head{
+      padding: 16px 16px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+    }
+    .card-title{ margin:0; font-size: 18px; letter-spacing:.2px; }
+    .card-sub{ margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height:1.4; }
+    .card-body{ padding: 16px; }
+
+    .section-label{
+      display:flex; align-items:center; gap:10px;
+      color: var(--text);
+      font-weight:800;
+      font-size: 14px;
+      letter-spacing:.2px;
+      margin: 0 0 10px;
+    }
+    .section-label::before{
+      content:"";
+      width: 4px; height: 18px;
+      background: var(--accent);
+      border-radius: 99px;
+      box-shadow: 0 0 0 3px rgba(245,197,24,.14);
+    }
+
+    /* Form */
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
+
+    label{ display:block; color: var(--muted); font-size:12px; margin: 0 0 6px; }
+    .control{
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      width: 100%;
+      font-size: 14px;
+      outline:none;
+    }
+    .control:focus{ box-shadow: var(--focus); border-color: rgba(245,197,24,.35); }
+    select.control{ cursor:pointer; }
+    .hint{ color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.45; }
+
+    .divider{ height:1px; background: rgba(255,255,255,.06); margin: 14px 0; }
+
+    /* Quiz UI */
+    .hud{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .hud-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .hud-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .chip strong{ color: var(--text); font-weight: 850; }
+    .meter{
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      width: 220px;
+      max-width: 65vw;
+    }
+    .meter > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(245,197,24,.85), rgba(245,197,24,.55));
+      transition: width .25s ease;
+    }
+
+    .qwrap{ margin-top: 14px; }
+    .question{
+      padding: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      background: rgba(0,0,0,.18);
+    }
+    .qtype{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .prompt{
+      display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+    }
+    .prompt .big{
+      font-size: 34px;
+      font-weight: 950;
+      letter-spacing:.6px;
+      line-height:1.05;
+    }
+    .prompt .meta{
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge .k{ font-family: var(--mono); color: var(--text); font-weight: 850; }
+    .badge .a{ color: var(--accent); font-weight: 850; }
+
+    .answers{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 720px){ .answers{ grid-template-columns:1fr; } }
+
+    .opt{
+      text-align:left;
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .opt:hover{ background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.20); }
+    .opt:active{ transform: translateY(1px); }
+    .opt:focus{ outline:none; box-shadow: var(--focus); }
+    .opt .idx{
+      display:inline-grid;
+      place-items:center;
+      width: 24px; height:24px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+      margin-right: 10px;
+      font-family: var(--mono);
+    }
+    .opt.correct{
+      border-color: rgba(25,195,125,.5);
+      background: rgba(25,195,125,.10);
+    }
+    .opt.wrong{
+      border-color: rgba(255,77,79,.50);
+      background: rgba(255,77,79,.10);
+    }
+    .opt.disabled{ pointer-events:none; opacity:.92; }
+
+    /* Flashcard flip */
+    .flashcard{
+      margin-top: 12px;
+      perspective: 1200px;
+    }
+    .flash-inner{
+      position:relative;
+      height: 220px;
+      border-radius: 18px;
+      transform-style: preserve-3d;
+      transition: transform .5s cubic-bezier(.2,.85,.2,1.1);
+      box-shadow: 0 14px 45px rgba(0,0,0,.35);
+    }
+    .flash-inner.flipped{ transform: rotateY(180deg); }
+    .face{
+      position:absolute; inset:0;
+      backface-visibility: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.22));
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      text-align:center;
+    }
+    .face.back{
+      transform: rotateY(180deg);
+      background: linear-gradient(180deg, rgba(245,197,24,.10), rgba(0,0,0,.22));
+      border-color: rgba(245,197,24,.25);
+    }
+    .face .label{
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing:.3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .face .value{
+      font-size: 44px;
+      font-weight: 950;
+      letter-spacing: .8px;
+      line-height: 1;
+    }
+    .face .sub{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .flash-actions{
+      display:flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap:wrap;
+    }
+    .flash-actions .btn{ flex:1; min-width: 180px; }
+
+    .toast{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .toast strong{ color: var(--text); }
+
+    /* Sidebar */
+    .side{
+      position: sticky;
+      top: 76px;
+    }
+    @media (max-width: 980px){ .side{ position: static; top:auto; } }
+
+    .statgrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .stat{
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+      text-align:left;
+    }
+    .stat .k{ color: var(--muted); font-size: 12px; }
+    .stat .v{ margin-top: 6px; font-size: 18px; font-weight: 900; }
+    .stat.good .v{ color: var(--good); }
+    .stat.bad .v{ color: var(--bad); }
+    .stat.total .v{ color: var(--accent); }
+
+    .list{
+      margin: 12px 0 0;
+      padding: 0;
+      list-style:none;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      overflow:hidden;
+      background: rgba(0,0,0,.16);
+    }
+    .list li{
+      padding: 12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .list li:last-child{ border-bottom:none; }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 3px 7px;
+      border-radius: 8px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      white-space:nowrap;
+    }
+
+    .footer{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.45;
+    }
+    a{ color: var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    /* Small utilities */
+    .hidden{ display:none !important; }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" role="banner">
+        <div class="imdb-chip" aria-hidden="true">IMDb</div>
+        <div class="brand-title">
+          <strong>Atomen • Flashcards & Quiz</strong>
+          <span>Leer namen ↔ symbolen • Meerkeuze of flip-cards</span>
+        </div>
+      </div>
+
+      <div class="pill" title="App status">
+        <span class="dot"></span>
+        <span id="statusText">Klaar om te starten</span>
+      </div>
+
+      <div class="spacer"></div>
+
+      <button class="btn ghost" id="btnHome" type="button">Instellingen</button>
+      <button class="btn danger" id="btnReset" type="button" title="Reset score en huidige sessie">Reset</button>
+      <button class="btn primary" id="btnStartTop" type="button">Start quiz</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <!-- Main -->
+      <section class="card" aria-live="polite">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title" id="mainTitle">Instellingen</h2>
+            <p class="card-sub" id="mainSub">
+              Kies richting, vraagtype en aantal vragen. Daarna start je een sessie.
+            </p>
+          </div>
+          <div class="pill" title="Dataset">
+            <span style="font-family:var(--mono);font-weight:900;color:var(--text);">118</span>
+            <span>elementen</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- View: Settings -->
+          <div id="viewSettings">
+            <div class="section-label">Quiz setup</div>
+
+            <div class="row">
+              <div>
+                <label for="mode">Quizmodus (richting)</label>
+                <select class="control" id="mode">
+                  <option value="nameToSymbol">Naam → symbool</option>
+                  <option value="symbolToName">Symbool → naam</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="qtype">Vraagtype</label>
+                <select class="control" id="qtype">
+                  <option value="mcq">Meerkeuze (4 opties)</option>
+                  <option value="flash">Pure flashcard (flip + zelf beoordelen)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:12px;">
+              <div>
+                <label for="count">Aantal vragen</label>
+                <input class="control" id="count" type="number" min="1" max="118" value="10" />
+              </div>
+
+              <div>
+                <label for="pool">Selectie</label>
+                <select class="control" id="pool">
+                  <option value="all">Alle elementen (1–118)</option>
+                  <option value="first20">Eerste 20 (snelle oefening)</option>
+                  <option value="mainGroup">Hoofdgroepen (1–86)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="hint">
+              Tips: bij <strong>meerkeuze</strong> kun je ook toetsen <span class="kbd">1</span>–<span class="kbd">4</span> gebruiken.
+              Bij <strong>flashcards</strong>: <span class="kbd">spatie</span> om te flippen.
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn primary" id="btnStart" type="button">Start</button>
+              <button class="btn" id="btnShufflePreview" type="button" title="Toon een willekeurige kaart als preview">Preview kaart</button>
+            </div>
+
+            <div class="toast" id="previewBox" style="margin-top:14px;">
+              <div>
+                <strong>Preview</strong>
+                <div id="previewText" style="margin-top:2px;">Klik “Preview kaart” om een willekeurig element te zien.</div>
+              </div>
+              <span class="badge" id="previewBadge"><span class="a">#</span><span class="k">—</span></span>
+            </div>
+          </div>
+
+          <!-- View: Quiz -->
+          <div id="viewQuiz" class="hidden">
+            <div class="hud">
+              <div class="hud-left">
+                <div class="chip"><span>Vraag</span> <strong id="hudIndex">1</strong><span>/</span><strong id="hudTotal">10</strong></div>
+                <div class="chip"><span>Modus</span> <strong id="hudMode">—</strong></div>
+                <div class="chip"><span>Type</span> <strong id="hudType">—</strong></div>
+              </div>
+              <div class="hud-right">
+                <div class="meter" aria-label="Voortgang"><div id="meterFill"></div></div>
+                <button class="btn" id="btnSkip" type="button" title="Volgende (telt als fout)">Sla over</button>
+              </div>
+            </div>
+
+            <div class="qwrap">
+              <div class="question" id="questionBox">
+                <div class="qtype">
+                  <span id="qtypeText">—</span>
+                  <span class="badge" id="metaBadge">
+                    <span class="a">#</span><span class="k" id="metaNumber">—</span>
+                    <span style="opacity:.6;">•</span>
+                    <span id="metaCat">—</span>
+                  </span>
+                </div>
+
+                <div class="prompt">
+                  <div class="big" id="promptBig">—</div>
+                  <div class="meta" id="promptSmall">—</div>
+                </div>
+
+                <!-- MCQ -->
+                <div id="mcqArea" class="hidden">
+                  <div class="answers" id="answers"></div>
+                  <div class="toast" id="feedbackMcq" style="display:none;">
+                    <div id="feedbackText">—</div>
+                    <button class="btn primary" id="btnNextMcq" type="button">Volgende</button>
+                  </div>
+                </div>
+
+                <!-- Flashcard -->
+                <div id="flashArea" class="hidden">
+                  <div class="flashcard">
+                    <div class="flash-inner" id="flashInner" role="button" tabindex="0" aria-label="Flashcard (klik om te flippen)">
+                      <div class="face front">
+                        <div class="label" id="flashFrontLabel">Vraag</div>
+                        <div class="value" id="flashFrontValue">—</div>
+                        <div class="sub">Klik of druk <span class="kbd">spatie</span> om te flippen</div>
+                      </div>
+                      <div class="face back">
+                        <div class="label" id="flashBackLabel">Antwoord</div>
+                        <div class="value" id="flashBackValue">—</div>
+                        <div class="sub" id="flashBackSub">Beoordeel jezelf 👇</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flash-actions">
+                    <button class="btn" id="btnFlip" type="button">Flip</button>
+                    <button class="btn" id="btnKnow" type="button" title="Markeer als juist">Ik wist dit ✅</button>
+                    <button class="btn danger" id="btnDont" type="button" title="Markeer als fout">Niet gelukt ❌</button>
+                    <button class="btn primary" id="btnNextFlash" type="button">Volgende</button>
+                  </div>
+
+                  <div class="hint" style="margin-top:10px;">
+                    In flashcard-modus telt “Volgende” pas als je <em>juist</em> of <em>fout</em> hebt gekozen (of “Sla over”).
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- View: Results -->
+          <div id="viewResults" class="hidden">
+            <div class="section-label">Resultaat</div>
+            <p class="card-sub" style="margin-top:0;">
+              Klaar! Je kunt opnieuw starten of instellingen aanpassen.
+            </p>
+
+            <div class="statgrid">
+              <div class="stat good">
+                <div class="k">Juist</div>
+                <div class="v" id="resCorrect">0</div>
+              </div>
+              <div class="stat bad">
+                <div class="k">Fout</div>
+                <div class="v" id="resWrong">0</div>
+              </div>
+              <div class="stat total">
+                <div class="k">Totaal</div>
+                <div class="v" id="resTotal">0</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn primary" id="btnRestartSame" type="button">Opnieuw (zelfde instellingen)</button>
+              <button class="btn" id="btnBackSettings" type="button">Terug naar instellingen</button>
+              <button class="btn danger" id="btnFullReset" type="button">Reset alles</button>
+            </div>
+
+            <div class="footer">
+              Sneltoetsen: <span class="kbd">R</span> opnieuw, <span class="kbd">Esc</span> instellingen.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar -->
+      <aside class="card side">
+        <div class="card-head">
+          <div>
+            <h3 class="card-title" style="font-size:16px;">Scorebord</h3>
+            <p class="card-sub" style="margin-top:6px;">Blijft tellen binnen je sessie.</p>
+          </div>
+          <div class="pill" title="Sessie">
+            <span class="dot"></span>
+            <span id="sessionState">Idle</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="statgrid">
+            <div class="stat good">
+              <div class="k">Juist</div>
+              <div class="v" id="scoreCorrect">0</div>
+            </div>
+            <div class="stat bad">
+              <div class="k">Fout</div>
+              <div class="v" id="scoreWrong">0</div>
+            </div>
+            <div class="stat total">
+              <div class="k">Totaal</div>
+              <div class="v" id="scoreTotal">0</div>
+            </div>
+          </div>
+
+          <ul class="list" style="margin-top:14px;">
+            <li><span>Meerkeuze: kies <span class="kbd">1</span>–<span class="kbd">4</span></span><span class="kbd">1–4</span></li>
+            <li><span>Flashcard flip</span><span class="kbd">Spatie</span></li>
+            <li><span>Volgende</span><span class="kbd">Enter</span></li>
+            <li><span>Instellingen</span><span class="kbd">Esc</span></li>
+            <li><span>Reset</span><span class="kbd">Ctrl</span>+<span class="kbd">Backspace</span></li>
+          </ul>
+
+          <div class="footer">
+            UI-stijl geïnspireerd door een donkere “IMDb-kaarten” layout: gele accentkleur, duidelijke typografie en cards.
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    /***************
+     * DATA (hardcoded from atomen.json)
+     ***************/
+    const ATOMEN = [
+      {"atoomnummer":1,"symbool":"H","naam":"Waterstof","categorie":"Niet-metalen"},
+      {"atoomnummer":2,"symbool":"He","naam":"Helium","categorie":"Edelgassen"},
+      {"atoomnummer":3,"symbool":"Li","naam":"Lithium","categorie":"Alkalimetalen"},
+      {"atoomnummer":4,"symbool":"Be","naam":"Beryllium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":5,"symbool":"B","naam":"Boor","categorie":"Metalloïden"},
+      {"atoomnummer":6,"symbool":"C","naam":"Koolstof","categorie":"Niet-metalen"},
+      {"atoomnummer":7,"symbool":"N","naam":"Stikstof","categorie":"Niet-metalen"},
+      {"atoomnummer":8,"symbool":"O","naam":"Zuurstof","categorie":"Niet-metalen"},
+      {"atoomnummer":9,"symbool":"F","naam":"Fluor","categorie":"Halogenen"},
+      {"atoomnummer":10,"symbool":"Ne","naam":"Neon","categorie":"Edelgassen"},
+      {"atoomnummer":11,"symbool":"Na","naam":"Natrium","categorie":"Alkalimetalen"},
+      {"atoomnummer":12,"symbool":"Mg","naam":"Magnesium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":13,"symbool":"Al","naam":"Aluminium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":14,"symbool":"Si","naam":"Silicium","categorie":"Metalloïden"},
+      {"atoomnummer":15,"symbool":"P","naam":"Fosfor","categorie":"Niet-metalen"},
+      {"atoomnummer":16,"symbool":"S","naam":"Zwavel","categorie":"Niet-metalen"},
+      {"atoomnummer":17,"symbool":"Cl","naam":"Chloor","categorie":"Halogenen"},
+      {"atoomnummer":18,"symbool":"Ar","naam":"Argon","categorie":"Edelgassen"},
+      {"atoomnummer":19,"symbool":"K","naam":"Kalium","categorie":"Alkalimetalen"},
+      {"atoomnummer":20,"symbool":"Ca","naam":"Calcium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":21,"symbool":"Sc","naam":"Scandium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":22,"symbool":"Ti","naam":"Titanium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":23,"symbool":"V","naam":"Vanadium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":24,"symbool":"Cr","naam":"Chroom","categorie":"Overgangsmetalen"},
+      {"atoomnummer":25,"symbool":"Mn","naam":"Mangaan","categorie":"Overgangsmetalen"},
+      {"atoomnummer":26,"symbool":"Fe","naam":"IJzer","categorie":"Overgangsmetalen"},
+      {"atoomnummer":27,"symbool":"Co","naam":"Kobalt","categorie":"Overgangsmetalen"},
+      {"atoomnummer":28,"symbool":"Ni","naam":"Nikkel","categorie":"Overgangsmetalen"},
+      {"atoomnummer":29,"symbool":"Cu","naam":"Koper","categorie":"Overgangsmetalen"},
+      {"atoomnummer":30,"symbool":"Zn","naam":"Zink","categorie":"Overgangsmetalen"},
+      {"atoomnummer":31,"symbool":"Ga","naam":"Gallium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":32,"symbool":"Ge","naam":"Germanium","categorie":"Metalloïden"},
+      {"atoomnummer":33,"symbool":"As","naam":"Arseen","categorie":"Metalloïden"},
+      {"atoomnummer":34,"symbool":"Se","naam":"Seleen","categorie":"Niet-metalen"},
+      {"atoomnummer":35,"symbool":"Br","naam":"Broom","categorie":"Halogenen"},
+      {"atoomnummer":36,"symbool":"Kr","naam":"Krypton","categorie":"Edelgassen"},
+      {"atoomnummer":37,"symbool":"Rb","naam":"Rubidium","categorie":"Alkalimetalen"},
+      {"atoomnummer":38,"symbool":"Sr","naam":"Strontium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":39,"symbool":"Y","naam":"Yttrium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":40,"symbool":"Zr","naam":"Zirkonium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":41,"symbool":"Nb","naam":"Niobium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":42,"symbool":"Mo","naam":"Molybdeen","categorie":"Overgangsmetalen"},
+      {"atoomnummer":43,"symbool":"Tc","naam":"Technetium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":44,"symbool":"Ru","naam":"Ruthenium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":45,"symbool":"Rh","naam":"Rhodium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":46,"symbool":"Pd","naam":"Palladium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":47,"symbool":"Ag","naam":"Zilver","categorie":"Overgangsmetalen"},
+      {"atoomnummer":48,"symbool":"Cd","naam":"Cadmium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":49,"symbool":"In","naam":"Indium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":50,"symbool":"Sn","naam":"Tin","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":51,"symbool":"Sb","naam":"Antimoon","categorie":"Metalloïden"},
+      {"atoomnummer":52,"symbool":"Te","naam":"Telluur","categorie":"Metalloïden"},
+      {"atoomnummer":53,"symbool":"I","naam":"Jood","categorie":"Halogenen"},
+      {"atoomnummer":54,"symbool":"Xe","naam":"Xenon","categorie":"Edelgassen"},
+      {"atoomnummer":55,"symbool":"Cs","naam":"Cesium","categorie":"Alkalimetalen"},
+      {"atoomnummer":56,"symbool":"Ba","naam":"Barium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":57,"symbool":"La","naam":"Lanthaan","categorie":"Lanthaniden"},
+      {"atoomnummer":58,"symbool":"Ce","naam":"Cerium","categorie":"Lanthaniden"},
+      {"atoomnummer":59,"symbool":"Pr","naam":"Praseodymium","categorie":"Lanthaniden"},
+      {"atoomnummer":60,"symbool":"Nd","naam":"Neodymium","categorie":"Lanthaniden"},
+      {"atoomnummer":61,"symbool":"Pm","naam":"Promethium","categorie":"Lanthaniden"},
+      {"atoomnummer":62,"symbool":"Sm","naam":"Samarium","categorie":"Lanthaniden"},
+      {"atoomnummer":63,"symbool":"Eu","naam":"Europium","categorie":"Lanthaniden"},
+      {"atoomnummer":64,"symbool":"Gd","naam":"Gadolinium","categorie":"Lanthaniden"},
+      {"atoomnummer":65,"symbool":"Tb","naam":"Terbium","categorie":"Lanthaniden"},
+      {"atoomnummer":66,"symbool":"Dy","naam":"Dysprosium","categorie":"Lanthaniden"},
+      {"atoomnummer":67,"symbool":"Ho","naam":"Holmium","categorie":"Lanthaniden"},
+      {"atoomnummer":68,"symbool":"Er","naam":"Erbium","categorie":"Lanthaniden"},
+      {"atoomnummer":69,"symbool":"Tm","naam":"Thulium","categorie":"Lanthaniden"},
+      {"atoomnummer":70,"symbool":"Yb","naam":"Ytterbium","categorie":"Lanthaniden"},
+      {"atoomnummer":71,"symbool":"Lu","naam":"Lutetium","categorie":"Lanthaniden"},
+      {"atoomnummer":72,"symbool":"Hf","naam":"Hafnium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":73,"symbool":"Ta","naam":"Tantaal","categorie":"Overgangsmetalen"},
+      {"atoomnummer":74,"symbool":"W","naam":"Wolfraam","categorie":"Overgangsmetalen"},
+      {"atoomnummer":75,"symbool":"Re","naam":"Rhenium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":76,"symbool":"Os","naam":"Osmium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":77,"symbool":"Ir","naam":"Iridium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":78,"symbool":"Pt","naam":"Platina","categorie":"Overgangsmetalen"},
+      {"atoomnummer":79,"symbool":"Au","naam":"Goud","categorie":"Overgangsmetalen"},
+      {"atoomnummer":80,"symbool":"Hg","naam":"Kwik","categorie":"Overgangsmetalen"},
+      {"atoomnummer":81,"symbool":"Tl","naam":"Thallium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":82,"symbool":"Pb","naam":"Lood","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":83,"symbool":"Bi","naam":"Bismut","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":84,"symbool":"Po","naam":"Polonium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":85,"symbool":"At","naam":"Astaat","categorie":"Halogenen"},
+      {"atoomnummer":86,"symbool":"Rn","naam":"Radon","categorie":"Edelgassen"},
+      {"atoomnummer":87,"symbool":"Fr","naam":"Francium","categorie":"Alkalimetalen"},
+      {"atoomnummer":88,"symbool":"Ra","naam":"Radium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":89,"symbool":"Ac","naam":"Actinium","categorie":"Actiniden"},
+      {"atoomnummer":90,"symbool":"Th","naam":"Thorium","categorie":"Actiniden"},
+      {"atoomnummer":91,"symbool":"Pa","naam":"Protactinium","categorie":"Actiniden"},
+      {"atoomnummer":92,"symbool":"U","naam":"Uraan","categorie":"Actiniden"},
+      {"atoomnummer":93,"symbool":"Np","naam":"Neptunium","categorie":"Actiniden"},
+      {"atoomnummer":94,"symbool":"Pu","naam":"Plutonium","categorie":"Actiniden"},
+      {"atoomnummer":95,"symbool":"Am","naam":"Americium","categorie":"Actiniden"},
+      {"atoomnummer":96,"symbool":"Cm","naam":"Curium","categorie":"Actiniden"},
+      {"atoomnummer":97,"symbool":"Bk","naam":"Berkelium","categorie":"Actiniden"},
+      {"atoomnummer":98,"symbool":"Cf","naam":"Californium","categorie":"Actiniden"},
+      {"atoomnummer":99,"symbool":"Es","naam":"Einsteinium","categorie":"Actiniden"},
+      {"atoomnummer":100,"symbool":"Fm","naam":"Fermium","categorie":"Actiniden"},
+      {"atoomnummer":101,"symbool":"Md","naam":"Mendelevium","categorie":"Actiniden"},
+      {"atoomnummer":102,"symbool":"No","naam":"Nobelium","categorie":"Actiniden"},
+      {"atoomnummer":103,"symbool":"Lr","naam":"Lawrencium","categorie":"Actiniden"},
+      {"atoomnummer":104,"symbool":"Rf","naam":"Rutherfordium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":105,"symbool":"Db","naam":"Dubnium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":106,"symbool":"Sg","naam":"Seaborgium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":107,"symbool":"Bh","naam":"Bohrium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":108,"symbool":"Hs","naam":"Hassium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":109,"symbool":"Mt","naam":"Meitnerium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":110,"symbool":"Ds","naam":"Darmstadtium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":111,"symbool":"Rg","naam":"Roentgenium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":112,"symbool":"Cn","naam":"Copernicium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":113,"symbool":"Nh","naam":"Nihonium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":114,"symbool":"Fl","naam":"Flerovium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":115,"symbool":"Mc","naam":"Moscovium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":116,"symbool":"Lv","naam":"Livermorium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":117,"symbool":"Ts","naam":"Tennessine","categorie":"Halogenen"},
+      {"atoomnummer":118,"symbool":"Og","naam":"Oganesson","categorie":"Edelgassen"}
+    ];
+
+    /***************
+     * Tiny SPA state
+     ***************/
+    const els = (ids)=>Object.fromEntries(ids.map(id=>[id, document.getElementById(id)]));
+    const $ = els([
+      "statusText","btnHome","btnReset","btnStartTop",
+      "mainTitle","mainSub",
+      "viewSettings","viewQuiz","viewResults",
+      "mode","qtype","count","pool","btnStart","btnShufflePreview","previewText","previewBadge",
+      "sessionState",
+      "scoreCorrect","scoreWrong","scoreTotal",
+      "hudIndex","hudTotal","hudMode","hudType","meterFill","btnSkip",
+      "qtypeText","metaNumber","metaCat","promptBig","promptSmall","mcqArea","answers","feedbackMcq","feedbackText","btnNextMcq",
+      "flashArea","flashInner","btnFlip","btnKnow","btnDont","btnNextFlash","flashFrontLabel","flashFrontValue","flashBackLabel","flashBackValue",
+      "resCorrect","resWrong","resTotal","btnRestartSame","btnBackSettings","btnFullReset"
+    ]);
+
+    const VIEWS = { SETTINGS:"settings", QUIZ:"quiz", RESULTS:"results" };
+
+    const app = {
+      view: VIEWS.SETTINGS,
+      settings: {
+        mode: "nameToSymbol",
+        qtype: "mcq",
+        count: 10,
+        pool: "all"
+      },
+      session: null, // { deck, idx, correct, wrong, total, current, mcq: { options, correctIndex }, flash: { flipped, judged } }
+    };
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+    function shuffle(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+    function sample(arr, k){
+      return shuffle(arr).slice(0, k);
+    }
+    function poolToData(pool){
+      if(pool==="first20") return ATOMEN.filter(x=>x.atoomnummer<=20);
+      if(pool==="mainGroup") return ATOMEN.filter(x=>x.atoomnummer<=86);
+      return ATOMEN.slice();
+    }
+
+    function setStatus(text){ $.statusText.textContent = text; }
+    function setSessionState(text){ $.sessionState.textContent = text; }
+
+    function showView(view){
+      app.view = view;
+      $.viewSettings.classList.toggle("hidden", view!==VIEWS.SETTINGS);
+      $.viewQuiz.classList.toggle("hidden", view!==VIEWS.QUIZ);
+      $.viewResults.classList.toggle("hidden", view!==VIEWS.RESULTS);
+
+      if(view===VIEWS.SETTINGS){
+        $.mainTitle.textContent = "Instellingen";
+        $.mainSub.textContent = "Kies richting, vraagtype en aantal vragen. Daarna start je een sessie.";
+        setStatus("Klaar om te starten");
+        setSessionState(app.session ? "Gepauzeerd" : "Idle");
+      }
+      if(view===VIEWS.QUIZ){
+        $.mainTitle.textContent = "Quiz";
+        $.mainSub.textContent = "Beantwoord de vraag. Score wordt live bijgehouden.";
+        setStatus("Bezig met quiz");
+        setSessionState("Actief");
+      }
+      if(view===VIEWS.RESULTS){
+        $.mainTitle.textContent = "Resultaat";
+        $.mainSub.textContent = "Overzicht van je sessie. Start opnieuw wanneer je wilt.";
+        setStatus("Sessie afgerond");
+        setSessionState("Klaar");
+      }
+    }
+
+    function syncSettingsFromUI(){
+      app.settings.mode = $.mode.value;
+      app.settings.qtype = $.qtype.value;
+      app.settings.pool = $.pool.value;
+      const max = poolToData(app.settings.pool).length;
+      const val = clamp(parseInt($.count.value || "10",10), 1, max);
+      app.settings.count = val;
+      $.count.value = String(val);
+    }
+    function syncUIFromSettings(){
+      $.mode.value = app.settings.mode;
+      $.qtype.value = app.settings.qtype;
+      $.pool.value = app.settings.pool;
+      $.count.value = String(app.settings.count);
+    }
+
+    function updateScoreUI(){
+      const s = app.session;
+      const correct = s ? s.correct : 0;
+      const wrong = s ? s.wrong : 0;
+      const total = s ? s.total : 0;
+      $.scoreCorrect.textContent = correct;
+      $.scoreWrong.textContent = wrong;
+      $.scoreTotal.textContent = total;
+    }
+
+    function labelMode(mode){ return mode==="nameToSymbol" ? "Naam → symbool" : "Symbool → naam"; }
+    function labelType(t){ return t==="mcq" ? "Meerkeuze" : "Flashcard"; }
+
+    function startSession(){
+      syncSettingsFromUI();
+      const data = poolToData(app.settings.pool);
+      const n = clamp(app.settings.count, 1, data.length);
+      const deck = sample(data, n);
+
+      app.session = {
+        deck,
+        idx: 0,
+        correct: 0,
+        wrong: 0,
+        total: 0,
+        current: null,
+        mcq: null,
+        flash: { flipped:false, judged:false }
+      };
+
+      updateScoreUI();
+      showView(VIEWS.QUIZ);
+      renderQuestion();
+    }
+
+    function endSession(){
+      const s = app.session;
+      $.resCorrect.textContent = s.correct;
+      $.resWrong.textContent = s.wrong;
+      $.resTotal.textContent = s.total;
+      showView(VIEWS.RESULTS);
+    }
+
+    function currentCard(){
+      const s = app.session;
+      return s.deck[s.idx] || null;
+    }
+
+    function promptFor(card){
+      const mode = app.settings.mode;
+      if(mode==="nameToSymbol"){
+        return { prompt: card.naam, answer: card.symbool, promptLabel:"Naam", answerLabel:"Symbool" };
+      }
+      return { prompt: card.symbool, answer: card.naam, promptLabel:"Symbool", answerLabel:"Naam" };
+    }
+
+    function buildMcq(card){
+      // 4 options: 1 correct + 3 random (by answer field)
+      const mode = app.settings.mode;
+      const answerKey = (mode==="nameToSymbol") ? "symbool" : "naam";
+      const correct = card[answerKey];
+
+      const pool = poolToData(app.settings.pool);
+      const others = shuffle(pool.filter(x => x.atoomnummer !== card.atoomnummer))
+        .map(x => x[answerKey])
+        .filter(v => v !== correct);
+
+      const opts = [correct];
+      for(const v of others){
+        if(opts.length>=4) break;
+        if(!opts.includes(v)) opts.push(v);
+      }
+      while(opts.length<4){ // fallback (shouldn't happen with this dataset, but safe)
+        opts.push(correct);
+      }
+
+      const shuffled = shuffle(opts);
+      return { options: shuffled, correctIndex: shuffled.indexOf(correct) };
+    }
+
+    function renderQuestion(){
+      const s = app.session;
+      const card = currentCard();
+      if(!card){ endSession(); return; }
+
+      s.current = card;
+      s.mcq = null;
+      s.flash = { flipped:false, judged:false };
+
+      // HUD
+      $.hudIndex.textContent = String(s.idx + 1);
+      $.hudTotal.textContent = String(s.deck.length);
+      $.hudMode.textContent = labelMode(app.settings.mode);
+      $.hudType.textContent = labelType(app.settings.qtype);
+      $.meterFill.style.width = `${Math.round((s.idx / s.deck.length) * 100)}%`;
+
+      // Meta
+      $.metaNumber.textContent = String(card.atoomnummer);
+      $.metaCat.textContent = card.categorie;
+
+      const p = promptFor(card);
+
+      $.promptBig.textContent = p.prompt;
+      $.promptSmall.textContent = `${p.promptLabel} • kies het juiste ${p.answerLabel.toLowerCase()}`;
+
+      // Switch type UI
+      const isMcq = app.settings.qtype === "mcq";
+      $.mcqArea.classList.toggle("hidden", !isMcq);
+      $.flashArea.classList.toggle("hidden", isMcq);
+
+      $.feedbackMcq.style.display = "none";
+      $.answers.innerHTML = "";
+
+      if(isMcq){
+        $.qtypeText.textContent = "Meerkeuze • kies 1 van 4";
+        s.mcq = buildMcq(card);
+        renderMcqOptions();
+      }else{
+        $.qtypeText.textContent = "Flashcard • flip en beoordeel jezelf";
+        renderFlashcard(card);
+      }
+    }
+
+    function renderMcqOptions(){
+      const s = app.session;
+      const { options, correctIndex } = s.mcq;
+
+      options.forEach((txt, i)=>{
+        const b = document.createElement("button");
+        b.className = "opt";
+        b.type = "button";
+        b.dataset.index = String(i);
+        b.innerHTML = `<span class="idx">${i+1}</span><span>${escapeHtml(txt)}</span>`;
+        b.addEventListener("click", ()=> chooseMcq(i));
+        $.answers.appendChild(b);
+      });
+
+      // focus first option for quick keyboard flow
+      const first = $.answers.querySelector("button");
+      if(first) first.focus();
+    }
+
+    function chooseMcq(i){
+      const s = app.session;
+      const { correctIndex, options } = s.mcq;
+
+      // lock options + show correctness
+      [...$.answers.querySelectorAll(".opt")].forEach(btn=>{
+        btn.classList.add("disabled");
+        const idx = parseInt(btn.dataset.index,10);
+        if(idx===correctIndex) btn.classList.add("correct");
+        if(idx===i && idx!==correctIndex) btn.classList.add("wrong");
+      });
+
+      const ok = i === correctIndex;
+      if(ok) s.correct++; else s.wrong++;
+      s.total++;
+      updateScoreUI();
+
+      $.feedbackText.innerHTML = ok
+        ? `✅ <strong>Juist!</strong> Antwoord: <strong>${escapeHtml(options[correctIndex])}</strong>`
+        : `❌ <strong>Fout.</strong> Correct was: <strong>${escapeHtml(options[correctIndex])}</strong>`;
+
+      $.feedbackMcq.style.display = "flex";
+      $.btnNextMcq.focus();
+    }
+
+    function renderFlashcard(card){
+      const p = promptFor(card);
+
+      $.flashFrontLabel.textContent = p.promptLabel;
+      $.flashFrontValue.textContent = p.prompt;
+
+      $.flashBackLabel.textContent = p.answerLabel;
+      $.flashBackValue.textContent = p.answer;
+
+      $.flashInner.classList.remove("flipped");
+    }
+
+    function flipFlash(){
+      const s = app.session;
+      s.flash.flipped = !s.flash.flipped;
+      $.flashInner.classList.toggle("flipped", s.flash.flipped);
+    }
+
+    function judgeFlash(ok){
+      const s = app.session;
+      s.flash.judged = true;
+      if(ok) s.correct++; else s.wrong++;
+      s.total++;
+      updateScoreUI();
+      // subtle feedback in promptSmall
+      $.promptSmall.textContent = ok ? "✅ Gemarkeerd als juist" : "❌ Gemarkeerd als fout";
+    }
+
+    function nextQuestion(){
+      const s = app.session;
+      s.idx++;
+      if(s.idx >= s.deck.length){
+        $.meterFill.style.width = "100%";
+        endSession();
+        return;
+      }
+      renderQuestion();
+    }
+
+    function skipQuestion(){
+      const s = app.session;
+      // counts as wrong if not already counted for this question
+      if(app.settings.qtype === "mcq"){
+        // if already answered, just move on
+        const locked = $.answers.querySelector(".opt.disabled");
+        if(!locked){
+          s.wrong++; s.total++; updateScoreUI();
+        }
+      }else{
+        if(!s.flash.judged){
+          s.wrong++; s.total++; updateScoreUI();
+        }
+      }
+      nextQuestion();
+    }
+
+    function resetAll(){
+      app.session = null;
+      updateScoreUI();
+      setSessionState("Idle");
+      setStatus("Reset uitgevoerd");
+      showView(VIEWS.SETTINGS);
+    }
+
+    // Helpers
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function previewRandom(){
+      syncSettingsFromUI();
+      const data = poolToData(app.settings.pool);
+      const card = data[Math.floor(Math.random()*data.length)];
+      const p = promptFor(card);
+      $.previewText.textContent = `${p.promptLabel}: ${p.prompt}  •  ${p.answerLabel}: ${p.answer}  •  ${card.categorie}`;
+      $.previewBadge.innerHTML = `<span class="a">#</span><span class="k">${card.atoomnummer}</span>`;
+    }
+
+    /***************
+     * Events
+     ***************/
+    $.btnStart.addEventListener("click", startSession);
+    $.btnStartTop.addEventListener("click", ()=>{
+      if(app.view===VIEWS.QUIZ && app.session) return; // already in quiz
+      startSession();
+    });
+
+    $.btnHome.addEventListener("click", ()=> showView(VIEWS.SETTINGS));
+    $.btnReset.addEventListener("click", resetAll);
+
+    $.btnShufflePreview.addEventListener("click", previewRandom);
+
+    $.btnNextMcq.addEventListener("click", nextQuestion);
+    $.btnSkip.addEventListener("click", skipQuestion);
+
+    // Flashcard controls
+    $.flashInner.addEventListener("click", flipFlash);
+    $.flashInner.addEventListener("keydown", (e)=>{
+      if(e.key==="Enter" || e.key===" "){ e.preventDefault(); flipFlash(); }
+    });
+    $.btnFlip.addEventListener("click", flipFlash);
+    $.btnKnow.addEventListener("click", ()=> judgeFlash(true));
+    $.btnDont.addEventListener("click", ()=> judgeFlash(false));
+    $.btnNextFlash.addEventListener("click", ()=>{
+      const s = app.session;
+      if(!s.flash.judged){
+        // gentle nudge: if not judged, flip if needed
+        $.promptSmall.textContent = "Kies eerst ‘Ik wist dit’ of ‘Niet gelukt’ (of gebruik ‘Sla over’).";
+        if(!s.flash.flipped) flipFlash();
+        return;
+      }
+      nextQuestion();
+    });
+
+    // Results buttons
+    $.btnRestartSame.addEventListener("click", ()=> startSession());
+    $.btnBackSettings.addEventListener("click", ()=> showView(VIEWS.SETTINGS));
+    $.btnFullReset.addEventListener("click", resetAll);
+
+    // Keep count max in sync with pool
+    $.pool.addEventListener("change", ()=>{
+      const data = poolToData($.pool.value);
+      $.count.max = String(data.length);
+      $.count.value = String(clamp(parseInt($.count.value||"10",10), 1, data.length));
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e)=>{
+      // Ctrl+Backspace = reset
+      if(e.ctrlKey && e.key === "Backspace"){
+        e.preventDefault();
+        resetAll();
+        return;
+      }
+      if(e.key === "Escape"){
+        showView(VIEWS.SETTINGS);
+        return;
+      }
+      if(app.view === VIEWS.RESULTS && (e.key.toLowerCase()==="r")){
+        startSession();
+        return;
+      }
+      if(app.view !== VIEWS.QUIZ || !app.session) return;
+
+      // Enter = next (when available)
+      if(e.key === "Enter"){
+        e.preventDefault();
+        if(app.settings.qtype==="mcq"){
+          if($.feedbackMcq.style.display !== "none") nextQuestion();
+        }else{
+          // flash
+          const s = app.session;
+          if(s.flash.judged) nextQuestion();
+        }
+        return;
+      }
+
+      if(app.settings.qtype==="mcq"){
+        if(["1","2","3","4"].includes(e.key)){
+          const idx = parseInt(e.key,10)-1;
+          // only if not locked yet
+          const locked = $.answers.querySelector(".opt.disabled");
+          if(!locked){
+            const btn = $.answers.querySelector(`.opt[data-index="${idx}"]`);
+            if(btn){ btn.click(); }
+          }
+        }
+      }else{
+        if(e.key === " "){
+          e.preventDefault();
+          flipFlash();
+        }
+      }
+    });
+
+    // initial
+    (function init(){
+      syncUIFromSettings();
+      $.pool.dispatchEvent(new Event("change"));
+      previewRandom();
+      showView(VIEWS.SETTINGS);
+      updateScoreUI();
+    })();
+  </script>
+</body>
+</html>
