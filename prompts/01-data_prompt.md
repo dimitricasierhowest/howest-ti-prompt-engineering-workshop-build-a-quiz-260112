@@ -1,3 +1,7 @@
-welke informatie kan je terugvinden per element in deze afbeelding?
-haal de lijst van element uit de afbeelding met de gevonden info per element en zet om naar een .md bestand
-zet om naar een donwloadable json bestand
+
+1. Beschrijf expliciet welke soorten informatie per chemisch element zichtbaar zijn in de afbeelding 
+2. Verzamel per element alle informatie die daadwerkelijk in de afbeelding zichtbaar is (geen externe kennis toevoegen) en voorzie een voorbeeld structuur voor:
+   a. een volledigmarkdown bestand,
+
+3. zet het  volledigmarkdown bestand op naar een json bestand.
+

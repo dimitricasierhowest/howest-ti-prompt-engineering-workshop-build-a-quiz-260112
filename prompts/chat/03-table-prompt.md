@@ -1,4 +1,4 @@
-schrijf een korte prompt volgens de regels van de kunst voor dit:
+schrijf een goeie prompt volgens de regels van de kunst voor dit:
 
 een SPA website met html, css en vanilla JS 
 - één index.html

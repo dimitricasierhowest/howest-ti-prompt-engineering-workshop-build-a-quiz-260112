@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Atomen Quiz – Naam ↔ Symbool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#1b1f27;
+      --panel-2:#222735;
+      --text:#e6e6e6;
+      --muted:#a0a4b8;
+      --accent:#f5c518;
+      --good:#4caf50;
+      --bad:#f44336;
+      --border:rgba(255,255,255,.08);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,sans-serif;
+      background:linear-gradient(180deg,#0c0e12,#111522);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{
+      padding:28px 16px 8px;
+      text-align:center;
+    }
+    header h1{
+      margin:0;
+      font-size:clamp(22px,4vw,34px);
+      letter-spacing:.2px;
+    }
+    header p{
+      margin:8px auto 0;
+      max-width:720px;
+      color:var(--muted);
+    }
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+    }
+    @media(min-width:900px){
+      .grid{grid-template-columns:320px 1fr;}
+    }
+    .card{
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      padding:16px;
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size:18px;
+    }
+    .card h3{
+      margin:0 0 8px;
+      font-size:15px;
+      color:var(--muted);
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    label{
+      display:block;
+      font-size:14px;
+      margin:10px 0 4px;
+      color:var(--muted);
+    }
+    select,input[type="range"]{
+      width:100%;
+      background:#0e111a;
+      color:var(--text);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+    }
+    input[type="range"]{padding:0}
+    .row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#121623;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      transition:transform .05s ease,background .15s ease,border-color .15s ease;
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,#f7d65b,#f5c518);
+      color:#111;
+      border-color:#f5c518;
+    }
+    .btn.good{background:rgba(76,175,80,.15);border-color:rgba(76,175,80,.6)}
+    .btn.bad{background:rgba(244,67,54,.15);border-color:rgba(244,67,54,.6)}
+    .btn:focus-visible{
+      outline:3px solid rgba(245,197,24,.6);
+      outline-offset:2px;
+    }
+    .btn:active{transform:translateY(1px)}
+    .muted{color:var(--muted)}
+    .pill{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#0e111a;
+      border:1px solid var(--border);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .quiz{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .progress{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      font-size:14px;
+      color:var(--muted);
+    }
+    .question-card{
+      position:relative;
+      overflow:hidden;
+      animation:fadeIn .25s ease;
+    }
+    @keyframes fadeIn{
+      from{opacity:0;transform:translateY(6px)}
+      to{opacity:1;transform:none}
+    }
+    .prompt{
+      text-align:center;
+      font-size:clamp(26px,5vw,40px);
+      font-weight:800;
+      margin:14px 0;
+      letter-spacing:.4px;
+    }
+    .subprompt{
+      text-align:center;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .options{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    @media(min-width:600px){
+      .options{grid-template-columns:1fr 1fr;}
+    }
+    .option{
+      text-align:center;
+      padding:14px;
+      font-size:18px;
+    }
+    .option.correct{
+      border-color:var(--good);
+      background:rgba(76,175,80,.15);
+    }
+    .option.wrong{
+      border-color:var(--bad);
+      background:rgba(244,67,54,.15);
+    }
+    .center{
+      text-align:center;
+    }
+    .score{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:14px;
+    }
+    .notice{
+      font-size:13px;
+      color:var(--accent);
+      margin-top:6px;
+    }
+    .help li{margin:6px 0;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Atomen Quiz</h1>
+    <p>Leer de juiste <strong>namen</strong> en <strong>symbolen</strong> van chemische elementen met flashcards of meerkeuzevragen.</p>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <!-- SETTINGS / HELP -->
+      <aside class="card">
+        <h2>Instellingen</h2>
+
+        <label for="direction">Richting</label>
+        <select id="direction">
+          <option value="name-to-symbol">Naam → Symbool</option>
+          <option value="symbol-to-name">Symbool → Naam</option>
+        </select>
+
+        <label for="style">Stijl</label>
+        <select id="style">
+          <option value="mc">Meerkeuze</option>
+          <option value="flash">Flashcard</option>
+        </select>
+
+        <label for="count">Aantal vragen: <strong><span id="countLabel">10</span></strong></label>
+        <input id="count" type="range" min="1" max="118" value="10" />
+
+        <div class="row" style="margin-top:14px">
+          <button id="start" class="btn primary">Start / Opnieuw</button>
+          <button id="resetScore" class="btn">Reset score</button>
+        </div>
+
+        <div id="capNotice" class="notice" hidden></div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+        <h2>Gebruik & leren</h2>
+        <ul class="help">
+          <li>Kies richting, stijl en aantal vragen.</li>
+          <li>Beantwoord elke vraag (klik of Enter).</li>
+          <li>Bekijk feedback en ga door naar de volgende.</li>
+          <li>Gebruik reset om opnieuw te oefenen.</li>
+        </ul>
+      </aside>
+
+      <!-- QUIZ -->
+      <main class="card quiz" aria-live="polite">
+        <div class="progress">
+          <div>
+            <span class="pill" id="modeLabel">—</span>
+          </div>
+          <div id="progressLabel">Vraag 0 / 0</div>
+        </div>
+
+        <div class="score">
+          <span class="pill">Juist: <strong id="sCorrect">0</strong></span>
+          <span class="pill">Fout: <strong id="sWrong">0</strong></span>
+          <span class="pill">Totaal: <strong id="sTotal">0</strong></span>
+        </div>
+
+        <div id="question" class="card question-card">
+          <div class="center muted">Klik op <strong>Start</strong> om te beginnen.</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // DATA (inline kopie)
+    // =========================
+    const ATOMEN = [
+      {"atoomnummer":1,"symbool":"H","naam":"Waterstof","categorie":"Niet-metalen"},
+      {"atoomnummer":2,"symbool":"He","naam":"Helium","categorie":"Edelgassen"},
+      {"atoomnummer":3,"symbool":"Li","naam":"Lithium","categorie":"Alkalimetalen"},
+      {"atoomnummer":4,"symbool":"Be","naam":"Beryllium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":5,"symbool":"B","naam":"Boor","categorie":"Metalloïden"},
+      {"atoomnummer":6,"symbool":"C","naam":"Koolstof","categorie":"Niet-metalen"},
+      {"atoomnummer":7,"symbool":"N","naam":"Stikstof","categorie":"Niet-metalen"},
+      {"atoomnummer":8,"symbool":"O","naam":"Zuurstof","categorie":"Niet-metalen"},
+      {"atoomnummer":9,"symbool":"F","naam":"Fluor","categorie":"Halogenen"},
+      {"atoomnummer":10,"symbool":"Ne","naam":"Neon","categorie":"Edelgassen"},
+      {"atoomnummer":11,"symbool":"Na","naam":"Natrium","categorie":"Alkalimetalen"},
+      {"atoomnummer":12,"symbool":"Mg","naam":"Magnesium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":13,"symbool":"Al","naam":"Aluminium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":14,"symbool":"Si","naam":"Silicium","categorie":"Metalloïden"},
+      {"atoomnummer":15,"symbool":"P","naam":"Fosfor","categorie":"Niet-metalen"},
+      {"atoomnummer":16,"symbool":"S","naam":"Zwavel","categorie":"Niet-metalen"},
+      {"atoomnummer":17,"symbool":"Cl","naam":"Chloor","categorie":"Halogenen"},
+      {"atoomnummer":18,"symbool":"Ar","naam":"Argon","categorie":"Edelgassen"},
+      {"atoomnummer":19,"symbool":"K","naam":"Kalium","categorie":"Alkalimetalen"},
+      {"atoomnummer":20,"symbool":"Ca","naam":"Calcium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":21,"symbool":"Sc","naam":"Scandium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":22,"symbool":"Ti","naam":"Titanium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":23,"symbool":"V","naam":"Vanadium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":24,"symbool":"Cr","naam":"Chroom","categorie":"Overgangsmetalen"},
+      {"atoomnummer":25,"symbool":"Mn","naam":"Mangaan","categorie":"Overgangsmetalen"},
+      {"atoomnummer":26,"symbool":"Fe","naam":"IJzer","categorie":"Overgangsmetalen"},
+      {"atoomnummer":27,"symbool":"Co","naam":"Kobalt","categorie":"Overgangsmetalen"},
+      {"atoomnummer":28,"symbool":"Ni","naam":"Nikkel","categorie":"Overgangsmetalen"},
+      {"atoomnummer":29,"symbool":"Cu","naam":"Koper","categorie":"Overgangsmetalen"},
+      {"atoomnummer":30,"symbool":"Zn","naam":"Zink","categorie":"Overgangsmetalen"},
+      {"atoomnummer":31,"symbool":"Ga","naam":"Gallium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":32,"symbool":"Ge","naam":"Germanium","categorie":"Metalloïden"},
+      {"atoomnummer":33,"symbool":"As","naam":"Arseen","categorie":"Metalloïden"},
+      {"atoomnummer":34,"symbool":"Se","naam":"Seleen","categorie":"Niet-metalen"},
+      {"atoomnummer":35,"symbool":"Br","naam":"Broom","categorie":"Halogenen"},
+      {"atoomnummer":36,"symbool":"Kr","naam":"Krypton","categorie":"Edelgassen"},
+      {"atoomnummer":37,"symbool":"Rb","naam":"Rubidium","categorie":"Alkalimetalen"},
+      {"atoomnummer":38,"symbool":"Sr","naam":"Strontium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":39,"symbool":"Y","naam":"Yttrium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":40,"symbool":"Zr","naam":"Zirkonium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":41,"symbool":"Nb","naam":"Niobium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":42,"symbool":"Mo","naam":"Molybdeen","categorie":"Overgangsmetalen"},
+      {"atoomnummer":43,"symbool":"Tc","naam":"Technetium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":44,"symbool":"Ru","naam":"Ruthenium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":45,"symbool":"Rh","naam":"Rhodium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":46,"symbool":"Pd","naam":"Palladium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":47,"symbool":"Ag","naam":"Zilver","categorie":"Overgangsmetalen"},
+      {"atoomnummer":48,"symbool":"Cd","naam":"Cadmium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":49,"symbool":"In","naam":"Indium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":50,"symbool":"Sn","naam":"Tin","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":51,"symbool":"Sb","naam":"Antimoon","categorie":"Metalloïden"},
+      {"atoomnummer":52,"symbool":"Te","naam":"Telluur","categorie":"Metalloïden"},
+      {"atoomnummer":53,"symbool":"I","naam":"Jood","categorie":"Halogenen"},
+      {"atoomnummer":54,"symbool":"Xe","naam":"Xenon","categorie":"Edelgassen"},
+      {"atoomnummer":55,"symbool":"Cs","naam":"Cesium","categorie":"Alkalimetalen"},
+      {"atoomnummer":56,"symbool":"Ba","naam":"Barium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":57,"symbool":"La","naam":"Lanthaan","categorie":"Lanthaniden"},
+      {"atoomnummer":58,"symbool":"Ce","naam":"Cerium","categorie":"Lanthaniden"},
+      {"atoomnummer":59,"symbool":"Pr","naam":"Praseodymium","categorie":"Lanthaniden"},
+      {"atoomnummer":60,"symbool":"Nd","naam":"Neodymium","categorie":"Lanthaniden"},
+      {"atoomnummer":61,"symbool":"Pm","naam":"Promethium","categorie":"Lanthaniden"},
+      {"atoomnummer":62,"symbool":"Sm","naam":"Samarium","categorie":"Lanthaniden"},
+      {"atoomnummer":63,"symbool":"Eu","naam":"Europium","categorie":"Lanthaniden"},
+      {"atoomnummer":64,"symbool":"Gd","naam":"Gadolinium","categorie":"Lanthaniden"},
+      {"atoomnummer":65,"symbool":"Tb","naam":"Terbium","categorie":"Lanthaniden"},
+      {"atoomnummer":66,"symbool":"Dy","naam":"Dysprosium","categorie":"Lanthaniden"},
+      {"atoomnummer":67,"symbool":"Ho","naam":"Holmium","categorie":"Lanthaniden"},
+      {"atoomnummer":68,"symbool":"Er","naam":"Erbium","categorie":"Lanthaniden"},
+      {"atoomnummer":69,"symbool":"Tm","naam":"Thulium","categorie":"Lanthaniden"},
+      {"atoomnummer":70,"symbool":"Yb","naam":"Ytterbium","categorie":"Lanthaniden"},
+      {"atoomnummer":71,"symbool":"Lu","naam":"Lutetium","categorie":"Lanthaniden"},
+      {"atoomnummer":72,"symbool":"Hf","naam":"Hafnium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":73,"symbool":"Ta","naam":"Tantaal","categorie":"Overgangsmetalen"},
+      {"atoomnummer":74,"symbool":"W","naam":"Wolfraam","categorie":"Overgangsmetalen"},
+      {"atoomnummer":75,"symbool":"Re","naam":"Rhenium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":76,"symbool":"Os","naam":"Osmium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":77,"symbool":"Ir","naam":"Iridium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":78,"symbool":"Pt","naam":"Platina","categorie":"Overgangsmetalen"},
+      {"atoomnummer":79,"symbool":"Au","naam":"Goud","categorie":"Overgangsmetalen"},
+      {"atoomnummer":80,"symbool":"Hg","naam":"Kwik","categorie":"Overgangsmetalen"},
+      {"atoomnummer":81,"symbool":"Tl","naam":"Thallium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":82,"symbool":"Pb","naam":"Lood","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":83,"symbool":"Bi","naam":"Bismut","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":84,"symbool":"Po","naam":"Polonium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":85,"symbool":"At","naam":"Astaat","categorie":"Halogenen"},
+      {"atoomnummer":86,"symbool":"Rn","naam":"Radon","categorie":"Edelgassen"},
+      {"atoomnummer":87,"symbool":"Fr","naam":"Francium","categorie":"Alkalimetalen"},
+      {"atoomnummer":88,"symbool":"Ra","naam":"Radium","categorie":"Aardalkalimetalen"},
+      {"atoomnummer":89,"symbool":"Ac","naam":"Actinium","categorie":"Actiniden"},
+      {"atoomnummer":90,"symbool":"Th","naam":"Thorium","categorie":"Actiniden"},
+      {"atoomnummer":91,"symbool":"Pa","naam":"Protactinium","categorie":"Actiniden"},
+      {"atoomnummer":92,"symbool":"U","naam":"Uraan","categorie":"Actiniden"},
+      {"atoomnummer":93,"symbool":"Np","naam":"Neptunium","categorie":"Actiniden"},
+      {"atoomnummer":94,"symbool":"Pu","naam":"Plutonium","categorie":"Actiniden"},
+      {"atoomnummer":95,"symbool":"Am","naam":"Americium","categorie":"Actiniden"},
+      {"atoomnummer":96,"symbool":"Cm","naam":"Curium","categorie":"Actiniden"},
+      {"atoomnummer":97,"symbool":"Bk","naam":"Berkelium","categorie":"Actiniden"},
+      {"atoomnummer":98,"symbool":"Cf","naam":"Californium","categorie":"Actiniden"},
+      {"atoomnummer":99,"symbool":"Es","naam":"Einsteinium","categorie":"Actiniden"},
+      {"atoomnummer":100,"symbool":"Fm","naam":"Fermium","categorie":"Actiniden"},
+      {"atoomnummer":101,"symbool":"Md","naam":"Mendelevium","categorie":"Actiniden"},
+      {"atoomnummer":102,"symbool":"No","naam":"Nobelium","categorie":"Actiniden"},
+      {"atoomnummer":103,"symbool":"Lr","naam":"Lawrencium","categorie":"Actiniden"},
+      {"atoomnummer":104,"symbool":"Rf","naam":"Rutherfordium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":105,"symbool":"Db","naam":"Dubnium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":106,"symbool":"Sg","naam":"Seaborgium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":107,"symbool":"Bh","naam":"Bohrium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":108,"symbool":"Hs","naam":"Hassium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":109,"symbool":"Mt","naam":"Meitnerium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":110,"symbool":"Ds","naam":"Darmstadtium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":111,"symbool":"Rg","naam":"Roentgenium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":112,"symbool":"Cn","naam":"Copernicium","categorie":"Overgangsmetalen"},
+      {"atoomnummer":113,"symbool":"Nh","naam":"Nihonium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":114,"symbool":"Fl","naam":"Flerovium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":115,"symbool":"Mc","naam":"Moscovium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":116,"symbool":"Lv","naam":"Livermorium","categorie":"Post-transitiemetalen"},
+      {"atoomnummer":117,"symbool":"Ts","naam":"Tennessine","categorie":"Halogenen"},
+      {"atoomnummer":118,"symbool":"Og","naam":"Oganesson","categorie":"Edelgassen"}
+    ];
+
+    // =========================
+    // STATE
+    // =========================
+    const els = {
+      direction: document.getElementById('direction'),
+      style: document.getElementById('style'),
+      count: document.getElementById('count'),
+      countLabel: document.getElementById('countLabel'),
+      start: document.getElementById('start'),
+      resetScore: document.getElementById('resetScore'),
+      question: document.getElementById('question'),
+      progressLabel: document.getElementById('progressLabel'),
+      modeLabel: document.getElementById('modeLabel'),
+      sCorrect: document.getElementById('sCorrect'),
+      sWrong: document.getElementById('sWrong'),
+      sTotal: document.getElementById('sTotal'),
+      capNotice: document.getElementById('capNotice')
+    };
+
+    let deck = [];
+    let idx = 0;
+    let answered = false;
+    let score = {correct:0, wrong:0, total:0};
+
+    // =========================
+    // HELPERS
+    // =========================
+    const norm = a => ({
+      name: a.naam || a.name || a.Naam || '',
+      symbol: a.symbool || a.symbol || a.Symbool || ''
+    });
+
+    const valid = ATOMEN.map(norm).filter(a => a.name && a.symbol);
+
+    function shuffle(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+
+    function updateScore(){
+      els.sCorrect.textContent = score.correct;
+      els.sWrong.textContent = score.wrong;
+      els.sTotal.textContent = score.total;
+    }
+
+    function updateLabels(){
+      els.countLabel.textContent = els.count.value;
+      els.modeLabel.textContent =
+        (els.direction.value === 'name-to-symbol' ? 'Naam → Symbool' : 'Symbool → Naam')
+        + ' · ' + (els.style.value === 'mc' ? 'Meerkeuze' : 'Flashcard');
+    }
+
+    // =========================
+    // QUIZ FLOW
+    // =========================
+    function startQuiz(){
+      const wanted = parseInt(els.count.value,10);
+      const max = valid.length;
+      let n = wanted;
+      els.capNotice.hidden = true;
+      if(wanted > max){
+        n = max;
+        els.capNotice.textContent = `Maximaal ${max} vragen beschikbaar.`;
+        els.capNotice.hidden = false;
+      }
+      deck = shuffle(valid).slice(0,n);
+      idx = 0;
+      answered = false;
+      score = {correct:0, wrong:0, total:0};
+      updateScore();
+      render();
+    }
+
+    function render(){
+      updateLabels();
+      els.progressLabel.textContent = `Vraag ${idx+1} / ${deck.length}`;
+      els.question.innerHTML = '';
+      if(idx >= deck.length){
+        els.question.innerHTML = `
+          <div class="center">
+            <h2>Klaar 🎉</h2>
+            <p class="muted">Je score:</p>
+            <p><strong>${score.correct}</strong> juist · <strong>${score.wrong}</strong> fout · <strong>${score.total}</strong> totaal</p>
+            <button class="btn primary" id="again">Opnieuw</button>
+          </div>`;
+        document.getElementById('again').onclick = startQuiz;
+        return;
+      }
+      const item = deck[idx];
+      const dir = els.direction.value;
+      const style = els.style.value;
+
+      const prompt = dir === 'name-to-symbol' ? item.name : item.symbol;
+      const answer = dir === 'name-to-symbol' ? item.symbol : item.name;
+
+      const p = document.createElement('div');
+      p.innerHTML = `
+        <div class="subprompt">${dir === 'name-to-symbol' ? 'Welke hoort hierbij?' : 'Hoe heet dit element?'}</div>
+        <div class="prompt">${prompt}</div>
+      `;
+      els.question.appendChild(p);
+
+      if(style === 'mc'){
+        const opts = new Set([answer]);
+        while(opts.size < Math.min(4, valid.length)){
+          const r = valid[Math.floor(Math.random()*valid.length)];
+          opts.add(dir === 'name-to-symbol' ? r.symbol : r.name);
+        }
+        const options = shuffle([...opts]);
+        const grid = document.createElement('div');
+        grid.className = 'options';
+        options.forEach(o=>{
+          const b = document.createElement('button');
+          b.className = 'btn option';
+          b.textContent = o;
+          b.onclick = ()=> selectOption(b, o === answer, answer, grid);
+          grid.appendChild(b);
+        });
+        els.question.appendChild(grid);
+      }else{
+        const show = document.createElement('button');
+        show.className = 'btn primary';
+        show.textContent = 'Toon antwoord';
+        show.onclick = ()=>{
+          if(answered) return;
+          answered = true;
+          show.remove();
+          const a = document.createElement('div');
+          a.className = 'prompt';
+          a.textContent = answer;
+          els.question.appendChild(a);
+
+          const row = document.createElement('div');
+          row.className = 'row';
+          const good = document.createElement('button');
+          good.className = 'btn good';
+          good.textContent = 'Juist';
+          const bad = document.createElement('button');
+          bad.className = 'btn bad';
+          bad.textContent = 'Fout';
+          good.onclick = ()=> mark(true);
+          bad.onclick = ()=> mark(false);
+          row.appendChild(good);
+          row.appendChild(bad);
+          els.question.appendChild(row);
+        };
+        els.question.appendChild(show);
+      }
+    }
+
+    function selectOption(btn, ok, answer, grid){
+      if(answered) return;
+      answered = true;
+      [...grid.children].forEach(b=>{
+        if(b.textContent === answer) b.classList.add('correct');
+        if(b === btn && !ok) b.classList.add('wrong');
+        b.disabled = true;
+      });
+      mark(ok, true);
+    }
+
+    function mark(ok, withNext){
+      score.total++;
+      ok ? score.correct++ : score.wrong++;
+      updateScore();
+      if(withNext){
+        const next = document.createElement('button');
+        next.className = 'btn primary';
+        next.textContent = 'Volgende';
+        next.onclick = ()=>{
+          idx++;
+          answered = false;
+          render();
+        };
+        els.question.appendChild(next);
+      }else{
+        const next = document.createElement('button');
+        next.className = 'btn primary';
+        next.textContent = 'Volgende';
+        next.onclick = ()=>{
+          idx++;
+          answered = false;
+          render();
+        };
+        els.question.appendChild(next);
+      }
+    }
+
+    // =========================
+    // EVENTS
+    // =========================
+    els.count.oninput = updateLabels;
+    els.direction.onchange = updateLabels;
+    els.style.onchange = updateLabels;
+    els.start.onclick = startQuiz;
+    els.resetScore.onclick = ()=>{
+      score = {correct:0, wrong:0, total:0};
+      updateScore();
+    };
+
+    document.addEventListener('keydown', e=>{
+      if(e.key === 'Enter'){
+        const primary = els.question.querySelector('.btn.primary');
+        if(primary) primary.click();
+      }
+    });
+
+    updateLabels();
+  </script>
+</body>
+</html>

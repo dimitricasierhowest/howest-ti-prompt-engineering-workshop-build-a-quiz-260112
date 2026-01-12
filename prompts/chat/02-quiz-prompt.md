@@ -1,6 +1,6 @@
 
 
-schrijf een korte prompt volgens de regels van de kunst voor dit:
+schrijf een goeie prompt volgens de regels van de kunst voor dit:
 
 een SPA website met html, css en vanilla JS 
 - één index.html
@@ -9,8 +9,6 @@ een SPA website met html, css en vanilla JS
 
 Gebruik de stijl van de meegeleverde screenshot van de imdb website.
 
-
-
 een flashcard app die het mogelijk maak om mij de juiste namen bij de juiste symbolen aan te leren en omgekeerd:
 - Hou de score bij van juist/fout/totaal
 - voorzie een reset/opnieuw knop
@@ -18,8 +16,8 @@ een flashcard app die het mogelijk maak om mij de juiste namen bij de juiste sym
 - mogelijkheid om quizmodus te kiezen:
   - naam -> symbool
   - symbool -> naam
-
   - meerkeuze of puur flashcard stijl
+  - voorzie een stappenplan
   
 
 -----

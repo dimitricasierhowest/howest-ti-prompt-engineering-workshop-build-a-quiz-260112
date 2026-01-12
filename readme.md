@@ -32,3 +32,15 @@ Voor statische sites (pure HTML/CSS/JS) kan je snel deployen met Netlify Drop.
 3. Sleep je projectfolder naar de Drop-zone om te publiceren.
 
 Voorbeeld: `https://melodic-bubblegum-e8e637.netlify.app/`
+
+
+## AI Tools
+
+- https://chatgpt.com/
+- gemini.google.com
+- https://www.deepseek.com/
+- https://lovable.dev/
+
+## Shortlink
+
+https://tinyurl.com/mryxtaca
